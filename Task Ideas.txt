@@ -1,0 +1,9 @@
+Company based Segregation of HRs & Candidates
+Upload Resume & Extract Data & Save in DB
+Send Interview Emails following Schedule, Cron Jobs
+Audit Logs
+Option to Generate Dynamic Query from User Prompt
+AI generated questions 
+
+Entities:
+Company, Job, HR, Candidate, Interview, Job-Candidate
