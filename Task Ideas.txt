@@ -5,5 +5,7 @@ Audit Logs
 Option to Generate Dynamic Query from User Prompt
 AI generated questions 
 
+Row Level Security (RLS) for Admin/HR able to access only their own data from Global Database (Candidates, Jobs, Tenants). Research.
+
 Entities:
-Company, Job, HR, Candidate, Interview, Job-Candidate
+Company, Job, Users (HR, Admin), Candidate, Interview, Job-Candidate

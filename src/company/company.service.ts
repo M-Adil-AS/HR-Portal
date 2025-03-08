@@ -16,30 +16,38 @@ export class CompanyService {
   ) {}
 
   async register({ companyName, adminEmail }: RegisterCompanyDto) {
+    const dbName = `${companyName.replace(/\s+/g, '_')}_DB`;
+
+    //TODO: Check if Global login can access Tenant DB and Tenant Login can access Global DB or not? Security Breach...
+
+    // Create Tenant Database
+    const tenantLoginCredentials =
+      await this.tenantService.createTenantDatabase(dbName);
+
     // Save Company-Tenant in Global DB
     const company = this.companyRepository.create({
       name: companyName,
       domain: adminEmail.split('@')[1],
       tenant: {
-        dbName: `Tenant_${companyName.replace(/\s+/g, '_')}_DB`, // Automatically create a related Tenant because of cascade:true
+        // Automatically create a related Tenant because of cascade:true
+        dbName: tenantLoginCredentials['dbName'],
+        login: tenantLoginCredentials['login'],
+        password: tenantLoginCredentials['password'],
       },
     });
     await this.companyRepository.save(company);
-
-    // Create Tenant Database
-    await this.tenantService.createTenantDatabase(company.tenant.dbName);
 
     const tenantConnection = await this.tenantService.getTenantConnection(
       company.tenant.id,
     );
 
-    // // Create Tenant DB Tables
+    // Create Tenant DB Tables
     await this.tenantService.createTenantTables(tenantConnection);
 
-    // // Insert Admin User into User Table of Tenant DB
+    // Insert Admin User into User Table of Tenant DB
     const userRepository = await this.tenantService.getTenantRepository(
-      company.tenant.id,
       User,
+      tenantConnection,
     );
     const user = userRepository.create({ email: adminEmail, role: 'Admin' });
     await userRepository.save(user);

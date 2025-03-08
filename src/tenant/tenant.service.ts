@@ -3,6 +3,7 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityTarget, ObjectLiteral, Repository } from 'typeorm';
 import { Tenant } from './tenant.entity';
 import { User } from 'src/user/user.entity';
+import { generateSecurePassword } from 'src/utils/security';
 
 @Injectable()
 export class TenantService {
@@ -17,12 +18,32 @@ export class TenantService {
   ) {}
 
   async createTenantDatabase(dbName: string) {
-    //TODO: Create Separate DB Login (User) For Each Tenant with Appropriate Permissions / Custom Role
-    //TODO: Create A Custom Role Having CREATE, UPDATE, DELETE TABLE Permissions for Global Database (Not SysAdmin)
-    await this.globalDataSource.query(`CREATE DATABASE ${dbName}`);
+    await this.globalDataSource.query(`CREATE DATABASE [${dbName}];`); // Needs to be executed separately
+
+    const tenantLoginPassword = generateSecurePassword(); // Generate dynamic password
+
+    await this.globalDataSource.query(`
+      CREATE LOGIN [Tenant ${dbName} Login] WITH PASSWORD = '${tenantLoginPassword}'; -- Create a tenant-specific login
+    
+      USE [${dbName}]; -- Switch to the new tenant database
+
+      CREATE USER [Tenant ${dbName} User] FOR LOGIN [Tenant ${dbName} Login]; -- Create a user inside the tenant database
+   
+      ALTER ROLE db_owner ADD MEMBER [Tenant ${dbName} User];  -- Grant access to the tenant database
+
+      USE [Global Database]; -- Switch back to global database
+    `);
+
+    return {
+      dbName,
+      login: `Tenant ${dbName} Login`,
+      password: tenantLoginPassword,
+    };
   }
 
   async getTenantConnection(tenantId: string): Promise<DataSource> {
+    //TODO: Implement True Connection Pooling
+
     if (this.connections.has(tenantId)) {
       const tenantConnection = this.connections.get(tenantId) as DataSource;
 
@@ -38,8 +59,8 @@ export class TenantService {
       type: 'mssql',
       host: 'localhost',
       port: 1435, // Default SQL Server port: Enable TCP/IP in SQL Server Config Manager, Set All IP to 1435, Restart SQL Express
-      username: 'SQL Server Login 2', // Enable SQL Server Authentication in SSMS, Add Login / User, Assign sysadmin Role
-      password: 'ssmsLogin#123', // Your password
+      username: tenantInfo.login, // Enable SQL Server Authentication in SSMS, Create Login, Map to User, Assign Role / Permissions
+      password: tenantInfo.password, // Your password
       database: tenantInfo.dbName, // Your database name
       name: `tenant-${tenantInfo.dbName}-connection`, // Dynamic Connection Name
       synchronize: false, // Auto-Create tables if turned on. Can cause problems if tables are already created in DB. Must always be false in production.
@@ -70,7 +91,7 @@ export class TenantService {
   private async getTenantDBCredentials(tenantId: string) {
     const tenant = await this.tenantRepository.findOne({
       where: { id: tenantId },
-      select: ['id', 'dbName'], // Adjust field names based on your entity
+      select: ['id', 'dbName', 'login', 'password'], // Adjust field names based on your entity
     });
 
     if (!tenant) throw new Error('Tenant not Found!');
@@ -80,10 +101,9 @@ export class TenantService {
   }
 
   async getTenantRepository<Entity extends ObjectLiteral>(
-    tenantId: string,
     entity: EntityTarget<Entity>,
+    tenantConnection: DataSource,
   ): Promise<Repository<Entity>> {
-    const connection = await this.getTenantConnection(tenantId);
-    return connection.getRepository(entity);
+    return tenantConnection.getRepository(entity);
   }
 }
