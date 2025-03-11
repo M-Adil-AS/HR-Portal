@@ -33,13 +33,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         return {
           type: 'mssql',
           host: configService.get<string>('DATABASE_HOST', 'localhost'),
-          port: Number(configService.get<string>('DATABASE_PORT', '1435')), // Default SQL Server port: Enable TCP/IP in SQL Server Config Manager, Set All IP to 1435, Restart SQL Express
+          port: Number(configService.get<string>('DATABASE_PORT', '1435')), // SQL Server Port: Enable TCP/IP in SQL Server Config Manager, Set Listen on All IPs to No, Enable 127.0.0.1 on Port 1435, Restart SQL Express
           username: configService.get<string>('GLOBAL_LOGIN'), // Enable SQL Server Authentication in SSMS, Create Login, Map to User, Assign Role / Permissions
           password: configService.get<string>('GLOBAL_PASS'), // Your password
           database: configService.get<string>('GLOBAL_DATABASE'), // Your database name
           synchronize: false, // Auto-Create tables if turned on. Can cause problems if tables are already created in DB. Must always be false in production.
           options: {
-            encrypt: true, // To Encrypt traffic between application and database
+            encrypt: true, // To Encrypt traffic between application and database, Set Force Encryption to True in SQL Server Configuration Manager Protocols for SQL Express
             trustServerCertificate: true, // Bypass SSL verification (for local)
           },
           entities: [Company, Tenant], // Register your entities

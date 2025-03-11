@@ -22,14 +22,14 @@ export class TenantService {
     const ownerConnection = new DataSource({
       type: 'mssql',
       host: this.configService.get<string>('DATABASE_HOST', 'localhost'),
-      port: Number(this.configService.get<string>('DATABASE_PORT', '1435')), // Default SQL Server port: Enable TCP/IP in SQL Server Config Manager, Set All IP to 1435, Restart SQL Express
+      port: Number(this.configService.get<string>('DATABASE_PORT', '1435')), // SQL Server Port: Enable TCP/IP in SQL Server Config Manager, Set Listen on All IPs to No, Enable 127.0.0.1 on Port 1435, Restart SQL Express
       username: this.configService.get<string>('OWNER_LOGIN'), // Enable SQL Server Authentication in SSMS, Create Login, Map to User, Assign Role / Permissions
       password: this.configService.get<string>('OWNER_PASS'), // Owner Login password
       database: this.configService.get<string>('OWNER_DATABASE'), // Connect to master DB for administrative tasks
       name: `owner-connection`, // Connection Name
       synchronize: false, // Auto-Create tables if turned on. Can cause problems if tables are already created in DB. Must always be false in production.
       options: {
-        encrypt: true, // To Encrypt traffic between application and database
+        encrypt: true, // To Encrypt traffic between application and database, Set Force Encryption to True in SQL Server Configuration Manager Protocols for SQL Express
         trustServerCertificate: true, // Bypass SSL verification (for local)
       },
       entities: [],
@@ -78,14 +78,14 @@ export class TenantService {
     const tenantConnection = new DataSource({
       type: 'mssql',
       host: this.configService.get<string>('DATABASE_HOST', 'localhost'),
-      port: Number(this.configService.get<string>('DATABASE_PORT', '1435')), // Default SQL Server port: Enable TCP/IP in SQL Server Config Manager, Set All IP to 1435, Restart SQL Express
+      port: Number(this.configService.get<string>('DATABASE_PORT', '1435')), // SQL Server Port: Enable TCP/IP in SQL Server Config Manager, Set Listen on All IPs to No, Enable 127.0.0.1 on Port 1435, Restart SQL Express
       username: tenantInfo.login, // Enable SQL Server Authentication in SSMS, Create Login, Map to User, Assign Role / Permissions
       password: tenantInfo.password, // Your password
       database: tenantInfo.dbName, // Your database name
       name: `tenant-${tenantInfo.dbName}-connection`, // Dynamic Connection Name
       synchronize: false, // Auto-Create tables if turned on. Can cause problems if tables are already created in DB. Must always be false in production.
       options: {
-        encrypt: true, // To Encrypt traffic between application and database
+        encrypt: true, // To Encrypt traffic between application and database, Set Force Encryption to True in SQL Server Configuration Manager Protocols for SQL Express
         trustServerCertificate: true, // Bypass SSL verification (for local)
       },
       entities: [User], // Register your entities

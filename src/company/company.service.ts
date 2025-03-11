@@ -18,8 +18,6 @@ export class CompanyService {
   async register({ companyName, adminEmail }: RegisterCompanyDto) {
     const dbName = `${companyName.replace(/\s+/g, '_')}_DB`;
 
-    //TODO: Check if Global login can access Tenant DB and Tenant Login can access Global DB or not? Security Breach...
-
     // Create Tenant Database
     const tenantLoginCredentials =
       await this.tenantService.createTenantDatabase(dbName);
