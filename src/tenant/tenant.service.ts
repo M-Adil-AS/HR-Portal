@@ -18,15 +18,15 @@ export class TenantService {
   ) {}
 
   async createTenantDatabase(dbName: string) {
-    // Using SysAdmin Login to create Tenant DBs instead of Global Login so that it doesn't become their owner and access/alter them
-    const sysAdminConnection = new DataSource({
+    // Using Owner Login to create Tenant DBs instead of Global Login so that it doesn't become their owner and access/alter them
+    const ownerConnection = new DataSource({
       type: 'mssql',
       host: this.configService.get<string>('DATABASE_HOST', 'localhost'),
       port: Number(this.configService.get<string>('DATABASE_PORT', '1435')), // Default SQL Server port: Enable TCP/IP in SQL Server Config Manager, Set All IP to 1435, Restart SQL Express
-      username: this.configService.get<string>('SYSADMIN_LOGIN'), // Enable SQL Server Authentication in SSMS, Create Login, Map to User, Assign Role / Permissions
-      password: this.configService.get<string>('SYSADMIN_PASS'), // SysAdmin password
-      database: this.configService.get<string>('SYSADMIN_DATABASE'), // Connect to master DB for administrative tasks
-      name: `sysAdmin-connection`, // Connection Name
+      username: this.configService.get<string>('OWNER_LOGIN'), // Enable SQL Server Authentication in SSMS, Create Login, Map to User, Assign Role / Permissions
+      password: this.configService.get<string>('OWNER_PASS'), // Owner Login password
+      database: this.configService.get<string>('OWNER_DATABASE'), // Connect to master DB for administrative tasks
+      name: `owner-connection`, // Connection Name
       synchronize: false, // Auto-Create tables if turned on. Can cause problems if tables are already created in DB. Must always be false in production.
       options: {
         encrypt: true, // To Encrypt traffic between application and database
@@ -35,13 +35,13 @@ export class TenantService {
       entities: [],
     });
 
-    await sysAdminConnection.initialize();
+    await ownerConnection.initialize();
     const tenantLoginPassword = generateSecurePassword(); // Generate dynamic password
 
     try {
-      await sysAdminConnection.query(`CREATE DATABASE [${dbName}];`); // Needs to be executed separately.
+      await ownerConnection.query(`CREATE DATABASE [${dbName}];`); // Needs to be executed separately.
 
-      await sysAdminConnection.query(`
+      await ownerConnection.query(`
         CREATE LOGIN [Tenant_${dbName}_Login] WITH PASSWORD = '${tenantLoginPassword}'; -- Create a tenant-specific login
 
         USE [${dbName}]; -- Switch to the new tenant database
@@ -51,7 +51,7 @@ export class TenantService {
         ALTER ROLE db_owner ADD MEMBER [Tenant_${dbName}_User]; -- Grant access to the tenant database
       `);
     } finally {
-      await sysAdminConnection.destroy(); // Close the connection
+      await ownerConnection.destroy(); // Close the connection
     }
 
     return {
