@@ -3,7 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityTarget, ObjectLiteral, Repository } from 'typeorm';
 import { Tenant } from './tenant.entity';
 import { User } from 'src/user/user.entity';
-import { generateSecurePassword } from 'src/utils/security';
+import {
+  decryptPassword,
+  encryptPassword,
+  generateRandomPassword,
+} from 'src/utils/security';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -36,7 +40,13 @@ export class TenantService {
     });
 
     await ownerConnection.initialize();
-    const tenantLoginPassword = generateSecurePassword(); // Generate dynamic password
+    const tenantLoginPassword = generateRandomPassword(); // Generate dynamic password
+
+    const { encryptedPassword, salt, iv } = encryptPassword(
+      tenantLoginPassword,
+      dbName,
+      this.configService.get<string>('ENCRYPTION_SECRET') as string,
+    );
 
     try {
       await ownerConnection.query(`CREATE DATABASE [${dbName}];`); // Needs to be executed separately.
@@ -57,7 +67,9 @@ export class TenantService {
     return {
       dbName,
       login: `Tenant_${dbName}_Login`,
-      password: tenantLoginPassword,
+      encryptedPassword,
+      salt,
+      iv,
     };
   }
 
@@ -72,15 +84,25 @@ export class TenantService {
       else this.connections.delete(tenantId);
     }
 
-    const tenantInfo: Partial<Tenant> =
-      await this.getTenantDBCredentials(tenantId);
+    const tenantInfo: Pick<
+      Tenant,
+      'id' | 'dbName' | 'login' | 'encryptedPassword' | 'salt' | 'iv'
+    > = await this.getTenantDBCredentials(tenantId);
+
+    const decryptedPassword = decryptPassword(
+      tenantInfo.encryptedPassword,
+      tenantInfo.dbName,
+      tenantInfo.salt,
+      tenantInfo.iv,
+      this.configService.get<string>('ENCRYPTION_SECRET') as string,
+    );
 
     const tenantConnection = new DataSource({
       type: 'mssql',
       host: this.configService.get<string>('DATABASE_HOST', 'localhost'),
       port: Number(this.configService.get<string>('DATABASE_PORT', '1435')), // SQL Server Port: Enable TCP/IP in SQL Server Config Manager, Set Listen on All IPs to No, Enable 127.0.0.1 on Port 1435, Restart SQL Express
       username: tenantInfo.login, // Enable SQL Server Authentication in SSMS, Create Login, Map to User, Assign Role / Permissions
-      password: tenantInfo.password, // Your password
+      password: decryptedPassword, // Your password
       database: tenantInfo.dbName, // Your database name
       name: `tenant-${tenantInfo.dbName}-connection`, // Dynamic Connection Name
       synchronize: false, // Auto-Create tables if turned on. Can cause problems if tables are already created in DB. Must always be false in production.
@@ -111,7 +133,7 @@ export class TenantService {
   private async getTenantDBCredentials(tenantId: string) {
     const tenant = await this.tenantRepository.findOne({
       where: { id: tenantId },
-      select: ['id', 'dbName', 'login', 'password'], // Adjust field names based on your entity
+      select: ['id', 'dbName', 'login', 'encryptedPassword', 'salt', 'iv'], // Adjust field names based on your entity
     });
 
     if (!tenant) throw new Error('Tenant not Found!');

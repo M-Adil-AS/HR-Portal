@@ -26,12 +26,7 @@ export class CompanyService {
     const company = this.companyRepository.create({
       name: companyName,
       domain: adminEmail.split('@')[1],
-      tenant: {
-        // Automatically create a related Tenant because of cascade:true
-        dbName: tenantLoginCredentials['dbName'],
-        login: tenantLoginCredentials['login'],
-        password: tenantLoginCredentials['password'],
-      },
+      tenant: tenantLoginCredentials, // Automatically create a related Tenant because of cascade:true
     });
     await this.companyRepository.save(company);
 

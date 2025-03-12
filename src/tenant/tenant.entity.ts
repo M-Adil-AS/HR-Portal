@@ -18,8 +18,14 @@ export class Tenant {
   @Column({ unique: true })
   login: string;
 
-  @Column()
-  password: string;
+  @Column({ type: 'text' })
+  encryptedPassword: string;
+
+  @Column({ type: 'char', length: 32 })
+  salt: string;
+
+  @Column({ type: 'char', length: 32 })
+  iv: string;
 
   // Join Column must be used in one of entities having one-one relationship with another entity. Should be used in the entity which owns the foreign key
   // onDelete Cascade so that if Company is Deleted then Tenant is also Deleted maintaining Referential Intergrity.
