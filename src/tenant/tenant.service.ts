@@ -12,8 +12,6 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class TenantService {
-  private connections = new Map<string, DataSource>();
-
   constructor(
     @InjectRepository(Tenant, 'globalConnection')
     private tenantRepository: Repository<Tenant>,
@@ -74,16 +72,6 @@ export class TenantService {
   }
 
   async getTenantConnection(tenantId: string): Promise<DataSource> {
-    //TODO: Implement True Connection Pooling
-
-    if (this.connections.has(tenantId)) {
-      const tenantConnection = this.connections.get(tenantId) as DataSource;
-
-      // Check for Connection is Stale or not
-      if (tenantConnection.isInitialized) return tenantConnection;
-      else this.connections.delete(tenantId);
-    }
-
     const tenantInfo: Pick<
       Tenant,
       'id' | 'dbName' | 'login' | 'encryptedPassword' | 'salt' | 'iv'
@@ -111,10 +99,14 @@ export class TenantService {
         trustServerCertificate: true, // Bypass SSL verification (for local)
       },
       entities: [User], // Register your entities
+      extra: {
+        max: 10, // Max connections the pool can create. If all are in use, new queries must wait until a connection is free
+        min: 2, // Pool always keeps at least Min connections open, even when idle
+        idleTimeoutMillis: 30000, // Close idle connections after 30s
+      },
     });
 
     await tenantConnection.initialize();
-    this.connections.set(tenantId, tenantConnection);
 
     return tenantConnection;
   }

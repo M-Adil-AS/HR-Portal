@@ -9,6 +9,7 @@ import { CompanyService } from './company.service';
 export class CompanyController {
   constructor(private companyService: CompanyService) {}
 
+  //TODO: Add Captcha
   @Post()
   async registerCompany(@Body() body: RegisterCompanyDto) {
     const company = await this.companyService.register(body);
