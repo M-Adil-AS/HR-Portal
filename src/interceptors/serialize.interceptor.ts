@@ -25,10 +25,14 @@ export class SerializeInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, handler: CallHandler): Observable<any> {
     return handler.handle().pipe(
-      map((data: any) => {
-        return plainToInstance(this.dto, data, {
-          excludeExtraneousValues: true, // makes sure that there aren't any extra values passed without explicitly mentioned @Expose / @Exclude decorator.
-        });
+      map((response: any) => {
+        if (response?.data) {
+          response.data = plainToInstance(this.dto, response.data, {
+            excludeExtraneousValues: true, // makes sure that there aren't any extra values passed without explicitly mentioned @Expose / @Exclude decorator.
+          });
+        }
+
+        return response;
       }),
     );
   }
