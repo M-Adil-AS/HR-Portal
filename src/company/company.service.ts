@@ -19,6 +19,7 @@ export class CompanyService {
     const dbName = `${companyName.replace(/\s+/g, '_')}_DB`;
 
     // Create Tenant Database
+    //TODO: Delete Tenant DB in case of error
     const tenantLoginCredentials =
       await this.tenantService.createTenantDatabase(dbName);
 

@@ -3,11 +3,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CompanyModule } from './company/company.module';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_PIPE, HttpAdapterHost } from '@nestjs/core';
 import { Company } from './company/company.entity';
 import { Tenant } from './tenant/tenant.entity';
 import { UserModule } from './user/user.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { HttpExceptionFilter } from './filters/http-exception.filter';
 
 // Database Concepts:
 // Server-level role/permission (e.g. sysadmin) can be applied only to Logins, because Users do not exist at the server level.
@@ -60,6 +61,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         whitelist: true, // removes any properties that are not defined in your DTO
         transform: true, // request payloads are automatically converted to DTO instances
       }),
+    },
+    {
+      provide: APP_FILTER,
+      inject: [HttpAdapterHost], // Inject HttpAdapterHost. To make Exception Filter platform generic (Express/Fastify)
+      useFactory: (httpAdapterHost: HttpAdapterHost) => {
+        return new HttpExceptionFilter(httpAdapterHost);
+      },
     },
   ],
 })

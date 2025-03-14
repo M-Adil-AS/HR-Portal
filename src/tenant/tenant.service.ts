@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityTarget, ObjectLiteral, Repository } from 'typeorm';
 import { Tenant } from './tenant.entity';
@@ -128,8 +128,7 @@ export class TenantService {
       select: ['id', 'dbName', 'login', 'encryptedPassword', 'salt', 'iv'], // Adjust field names based on your entity
     });
 
-    if (!tenant) throw new Error('Tenant not Found!');
-    //TODO: Throw Specific Error
+    if (!tenant) throw new NotFoundException('Tenant not Found!');
 
     return tenant;
   }
