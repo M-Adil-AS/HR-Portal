@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Company } from './company.entity';
 import { Repository } from 'typeorm';
@@ -16,6 +16,21 @@ export class CompanyService {
   ) {}
 
   async register({ companyName, adminEmail }: RegisterCompanyDto) {
+    const domain = adminEmail.split('@')[1];
+
+    const companyAlreadyExists = await this.companyRepository.findOne({
+      where: [{ name: companyName }, { domain }],
+      select: ['id', 'name', 'domain'], // Adjust field names based on your entity
+    });
+
+    if (companyAlreadyExists?.['name'] === companyName) {
+      throw new BadRequestException('This Company is already registered!');
+    } else if (companyAlreadyExists?.['domain'] === domain) {
+      throw new BadRequestException(
+        'Company with this domain is already registered!',
+      );
+    }
+
     const dbName = `${companyName.replace(/\s+/g, '_')}_DB`;
 
     // Create Tenant Database
@@ -26,7 +41,7 @@ export class CompanyService {
     // Save Company-Tenant in Global DB
     const company = this.companyRepository.create({
       name: companyName,
-      domain: adminEmail.split('@')[1],
+      domain,
       tenant: tenantLoginCredentials, // Automatically create a related Tenant because of cascade:true
     });
     await this.companyRepository.save(company);

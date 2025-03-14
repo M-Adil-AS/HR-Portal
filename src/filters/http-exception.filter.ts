@@ -9,6 +9,8 @@ import { HttpAdapterHost } from '@nestjs/core';
 import { Request, Response } from 'express';
 import { QueryFailedError } from 'typeorm';
 
+//TODO: After all the types, is it supposed to be HttpExceptionFilter or Global?
+
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
@@ -67,7 +69,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
     //TODO: httpService (Axios Freeze)
 
     // Hide Database Details from the client
-    //TODO: What if we want to send unique constraint errors to client without DB Details
     const responseBody = {
       message: !(exception instanceof QueryFailedError)
         ? message

@@ -21,8 +21,8 @@ export function IsCompanyDomain(validationOptions?: ValidationOptions) {
       options: validationOptions,
       validator: {
         validate(email: string): boolean {
-          const domain = email.split('@')[1];
-          return Boolean(domain && !commonDomains.has(domain.toLowerCase()));
+          const domain = email?.split('@')[1];
+          return Boolean(domain && !commonDomains.has(domain?.toLowerCase()));
         },
       },
     });

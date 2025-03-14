@@ -1,4 +1,4 @@
-import { Module, ValidationPipe } from '@nestjs/common';
+import { BadRequestException, Module, ValidationPipe } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CompanyModule } from './company/company.module';
@@ -60,6 +60,21 @@ import { HttpExceptionFilter } from './filters/http-exception.filter';
       useValue: new ValidationPipe({
         whitelist: true, // removes any properties that are not defined in your DTO
         transform: true, // request payloads are automatically converted to DTO instances
+        stopAtFirstError: true, // one error returned per field
+        exceptionFactory: (errors) => {
+          return new BadRequestException({
+            error: 'Bad Request',
+            statusCode: 400,
+            type: 'validator', // Identifies this as a validator error for frontend containing issues
+            message: 'Validation Error(s)', // Single-line error for alert popup
+            issues: errors.map((error) => ({
+              field: error.property,
+              message:
+                Object.values(error?.constraints ?? {})[0] ||
+                'Validation Error',
+            })),
+          });
+        },
       }),
     },
     {
