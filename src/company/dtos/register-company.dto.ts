@@ -4,7 +4,6 @@ import { IsCompanyDomain } from 'src/validators/company-domain.validator';
 import validator from 'validator';
 
 export class RegisterCompanyDto {
-  //TODO: Company Name Length Check in DB & TypeORM Entity & Dto
   @IsString({
     message: 'Company Name must be string',
   })
@@ -24,6 +23,9 @@ export class RegisterCompanyDto {
   @IsEmail({}, { message: 'Invalid email format' })
   @IsCompanyDomain({
     message: 'Please use the company email, not a personal email',
+  })
+  @Length(6, 100, {
+    message: 'Email must be between 6 and 100 characters',
   })
   // Type check inside Transform because Transform runs before other checks
   // Normalize and sanitize email

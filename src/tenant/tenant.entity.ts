@@ -12,10 +12,10 @@ export class Tenant {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true, length: 53 })
   dbName: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true, length: 66 })
   login: string;
 
   @Column({ type: 'text' })

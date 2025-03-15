@@ -10,10 +10,10 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'nvarchar', length: 255, unique: true })
+  @Column({ type: 'varchar', unique: true, length: 100 })
   email: string;
 
-  @Column({ type: 'nvarchar', length: 50 })
+  @Column({ type: 'varchar', length: 50 })
   role: string;
 
   @CreateDateColumn({ type: 'datetime', default: () => 'GETDATE()' })

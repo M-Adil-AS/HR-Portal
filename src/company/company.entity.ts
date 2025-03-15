@@ -12,10 +12,10 @@ export class Company {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true, length: 50 })
+  @Column({ type: 'varchar', unique: true, length: 50 })
   name: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true, length: 98 })
   domain: string;
 
   @CreateDateColumn({ type: 'datetime', default: () => 'GETDATE()' })

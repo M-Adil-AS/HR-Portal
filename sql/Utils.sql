@@ -1,3 +1,6 @@
+/* Read Table Schema */
+EXEC sp_help 'Tenants'; 
+
 /* Get Server-Level Permissions applied to any Login */
 SELECT sp.name AS principal_name, sp.type_desc, sp.is_disabled,  
        spr.permission_name, spr.state_desc  
