@@ -9,8 +9,8 @@ export class RegisterCompanyDto {
     message: 'Company Name must be string',
   })
   // Must be validated to avoid SQL Injection Attack as it is used in raw SQL query rather than TypeORM queries which perform parameterization by default
-  @Matches(/^[a-zA-Z0-9_]+$/, {
-    message: 'Company Name must only contain letters, numbers, and underscores',
+  @Matches(/^[a-zA-Z ]+$/, {
+    message: 'Company Name must only contain letters and spaces',
   })
   // Type check inside Transform because Transform runs before other checks
   @Transform(({ value }) =>
