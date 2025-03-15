@@ -12,7 +12,7 @@ ALTER ROLE [Global Database Manager] ADD MEMBER [Global Database User]; -- Assig
 
 CREATE TABLE Companies (
     id VARCHAR(100) PRIMARY KEY DEFAULT NEWID(),
-    name VARCHAR(255) UNIQUE NOT NULL CHECK (LEN(name) BETWEEN 1 AND 50),
+    name VARCHAR(50) UNIQUE NOT NULL CHECK (LEN(name) BETWEEN 3 AND 50),
     domain VARCHAR(255) UNIQUE NOT NULL,
 	createdAt DATETIME DEFAULT GETDATE()
 );
@@ -27,3 +27,6 @@ CREATE TABLE Tenants (
     iv CHAR(32) NOT NULL
 	FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE
 );
+
+DROP TABLE Tenants;
+DROP TABLE Companies;

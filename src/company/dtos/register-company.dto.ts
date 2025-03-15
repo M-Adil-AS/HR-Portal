@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsEmail, IsString, Matches } from 'class-validator';
+import { IsEmail, IsString, Length, Matches } from 'class-validator';
 import { IsCompanyDomain } from 'src/validators/company-domain.validator';
 import validator from 'validator';
 
@@ -11,6 +11,9 @@ export class RegisterCompanyDto {
   // Must be validated to avoid SQL Injection Attack as it is used in raw SQL query rather than TypeORM queries which perform parameterization by default
   @Matches(/^[a-zA-Z ]+$/, {
     message: 'Company Name must only contain letters and spaces',
+  })
+  @Length(3, 50, {
+    message: 'Company Name must be between 3 and 50 characters',
   })
   // Type check inside Transform because Transform runs before other checks
   @Transform(({ value }) =>
