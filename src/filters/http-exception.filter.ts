@@ -24,7 +24,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     let status: number = HttpStatus.INTERNAL_SERVER_ERROR; // Default Error Status
-    let message: string = 'Internal Server Error'; // Default Error Message
+    let message: string = exception?.['message'] || 'Internal Server Error'; // Default Error Message
     let data: object | null = null; // Default Error Data
 
     if (exception instanceof HttpException) {

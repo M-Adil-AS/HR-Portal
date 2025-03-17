@@ -11,7 +11,6 @@ export class CompanyController {
   constructor(private companyService: CompanyService) {}
 
   //TODO: Add Captcha
-  //TODO: Company is registered but Tenant throws unique error?
   @Serialize(CompanyDto)
   @Post()
   async registerCompany(@Body() body: RegisterCompanyDto) {

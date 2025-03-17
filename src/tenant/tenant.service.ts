@@ -21,23 +21,8 @@ export class TenantService {
 
   async createTenantDatabase(dbName: string) {
     // Using Owner Login to create Tenant DBs instead of Global Login so that it doesn't become their owner and access/alter them
-    const ownerConnection = new DataSource({
-      type: 'mssql',
-      host: this.configService.get<string>('DATABASE_HOST', 'localhost'),
-      port: Number(this.configService.get<string>('DATABASE_PORT', '1435')), // SQL Server Port: Enable TCP/IP in SQL Server Config Manager, Set Listen on All IPs to No, Enable 127.0.0.1 on Port 1435, Restart SQL Express
-      username: this.configService.get<string>('OWNER_LOGIN'), // Enable SQL Server Authentication in SSMS, Create Login, Map to User, Assign Role / Permissions
-      password: this.configService.get<string>('OWNER_PASS'), // Owner Login password
-      database: this.configService.get<string>('OWNER_DATABASE'), // Connect to master DB for administrative tasks
-      name: `owner-connection`, // Connection Name
-      synchronize: false, // Auto-Create tables if turned on. Can cause problems if tables are already created in DB. Must always be false in production.
-      options: {
-        encrypt: true, // To Encrypt traffic between application and database, Set Force Encryption to True in SQL Server Configuration Manager Protocols for SQL Express
-        trustServerCertificate: true, // Bypass SSL verification (for local)
-      },
-      entities: [],
-    });
+    const ownerConnection = await this.getOwnerConnection();
 
-    await ownerConnection.initialize();
     const tenantLoginPassword = generateRandomPassword(); // Generate dynamic password
 
     const { encryptedPassword, salt, iv } = encryptPassword(
@@ -49,6 +34,7 @@ export class TenantService {
     try {
       await ownerConnection.query(`CREATE DATABASE [${dbName}];`); // Needs to be executed separately.
 
+      // The statements in .query do not execute in a transaction
       await ownerConnection.query(`
         CREATE LOGIN [Tenant_${dbName}_Login] WITH PASSWORD = '${tenantLoginPassword}'; -- Create a tenant-specific login
 
@@ -58,6 +44,24 @@ export class TenantService {
 
         ALTER ROLE db_owner ADD MEMBER [Tenant_${dbName}_User]; -- Grant access to the tenant database
       `);
+    } catch (error) {
+      try {
+        await ownerConnection.query(`
+          USE [master];
+ 
+          IF EXISTS (SELECT name FROM sys.databases WHERE name = '${dbName}')
+          BEGIN
+            ALTER DATABASE [${dbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; -- Close all existing connections before dropping
+            DROP DATABASE [${dbName}];
+          END
+          
+          DROP LOGIN IF EXISTS [Tenant_${dbName}_Login];
+      `);
+      } catch (cleanupError) {
+        console.log('Create Tenant Database Cleanup Error: ', cleanupError); // Log the cleanup Error
+      }
+
+      throw error; // Throw the original Error
     } finally {
       await ownerConnection.destroy(); // Close the connection
     }
@@ -138,5 +142,47 @@ export class TenantService {
     tenantConnection: DataSource,
   ): Promise<Repository<Entity>> {
     return tenantConnection.getRepository(entity);
+  }
+
+  async deleteTenantDatabase(dbName: string) {
+    // Using Owner Login to delete Tenant DBs because it's the owner
+    let ownerConnection;
+
+    try {
+      ownerConnection = await this.getOwnerConnection();
+
+      // Drop Database (Ensure no active connections before dropping)
+      await ownerConnection.query(`
+      ALTER DATABASE [${dbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+      DROP DATABASE [${dbName}];
+
+      DROP LOGIN [Tenant_${dbName}_Login];
+    `);
+    } catch (cleanupError) {
+      console.log('Delete Tenant Database Cleanup Error: ', cleanupError); // Log the cleanup Error
+    } finally {
+      if (ownerConnection) await ownerConnection.destroy();
+    }
+  }
+
+  private async getOwnerConnection(): Promise<DataSource> {
+    const ownerConnection = new DataSource({
+      type: 'mssql',
+      host: this.configService.get<string>('DATABASE_HOST', 'localhost'),
+      port: Number(this.configService.get<string>('DATABASE_PORT', '1435')),
+      username: this.configService.get<string>('OWNER_LOGIN'),
+      password: this.configService.get<string>('OWNER_PASS'),
+      database: this.configService.get<string>('OWNER_DATABASE'),
+      name: `owner-connection`,
+      synchronize: false,
+      options: {
+        encrypt: true,
+        trustServerCertificate: true,
+      },
+      entities: [],
+    });
+
+    await ownerConnection.initialize();
+    return ownerConnection;
   }
 }
