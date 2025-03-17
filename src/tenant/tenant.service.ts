@@ -48,15 +48,18 @@ export class TenantService {
       try {
         await ownerConnection.query(`
           USE [master];
- 
+
           IF EXISTS (SELECT name FROM sys.databases WHERE name = '${dbName}')
           BEGIN
             ALTER DATABASE [${dbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; -- Close all existing connections before dropping
             DROP DATABASE [${dbName}];
           END
-          
-          DROP LOGIN IF EXISTS [Tenant_${dbName}_Login];
-      `);
+
+          IF EXISTS (SELECT name FROM sys.server_principals WHERE name = 'Tenant_${dbName}_Login')
+          BEGIN
+            DROP LOGIN [Tenant_${dbName}_Login];
+          END
+        `);
       } catch (cleanupError) {
         console.log('Create Tenant Database Cleanup Error: ', cleanupError); // Log the cleanup Error
       }
