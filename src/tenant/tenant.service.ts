@@ -178,6 +178,8 @@ export class TenantService {
   }
 
   private async getOwnerConnection(): Promise<DataSource> {
+    // Create a new Owner Connection and destroy it in every request to avoid cross-request interference (i.e. DB switching)
+
     const ownerConnection = new DataSource({
       type: 'mssql',
       host: this.configService.get<string>('DATABASE_HOST', 'localhost'),
