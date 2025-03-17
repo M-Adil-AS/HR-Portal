@@ -32,10 +32,17 @@ export class TenantService {
     );
 
     try {
-      await ownerConnection.query(`CREATE DATABASE [${dbName}];`); // Needs to be executed separately.
+      // Needs to be executed separately.
+      await ownerConnection.query(`
+        USE [master]; 
+
+        CREATE DATABASE [${dbName}];
+      `);
 
       // The statements in .query do not execute in a transaction
       await ownerConnection.query(`
+        USE [master];
+
         CREATE LOGIN [Tenant_${dbName}_Login] WITH PASSWORD = '${tenantLoginPassword}'; -- Create a tenant-specific login
 
         USE [${dbName}]; -- Switch to the new tenant database
@@ -156,10 +163,12 @@ export class TenantService {
 
       // Drop Database (Ensure no active connections before dropping)
       await ownerConnection.query(`
-      ALTER DATABASE [${dbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-      DROP DATABASE [${dbName}];
+        USE [master];
 
-      DROP LOGIN [Tenant_${dbName}_Login];
+        ALTER DATABASE [${dbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+        DROP DATABASE [${dbName}];
+
+        DROP LOGIN [Tenant_${dbName}_Login];
     `);
     } catch (cleanupError) {
       console.log('Delete Tenant Database Cleanup Error: ', cleanupError); // Log the cleanup Error
