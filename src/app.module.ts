@@ -1,4 +1,9 @@
-import { BadRequestException, Module, ValidationPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpStatus,
+  Module,
+  ValidationPipe,
+} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CompanyModule } from './company/company.module';
@@ -75,7 +80,7 @@ import { GlobalConnectionInterceptor } from './interceptors/global-connection.in
         exceptionFactory: (errors) => {
           return new BadRequestException({
             error: 'Bad Request',
-            statusCode: 400,
+            statusCode: HttpStatus.BAD_REQUEST,
             type: 'validator', // Identifies this as a validator error for frontend containing issues
             message: 'Validation Error(s)', // Single-line error for alert popup
             issues: errors.map((error) => ({

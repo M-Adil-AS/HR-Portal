@@ -52,6 +52,31 @@ export class HttpExceptionFilter implements ExceptionFilter {
         };
       }
     }
+    // else if (exception instanceof AxiosError) {
+    //   // The request was made and the server responded with a non-2xx status code
+    //   if (exception?.response) {
+    //     status = exception?.response?.status;
+    //     message = `Request Failed with Status Code ${status}. ${exception?.response?.data['description'] || exception?.response?.data['message'] || ''}`;
+    //     data = exception?.response?.data;
+    //   }
+    //   // The request was made but no response was received
+    //   else if (exception?.request) {
+    //     message = `Request Failed with Status Code ${status}. No Response received from the server!`;
+    //     data = exception?.request;
+    //   }
+    //   // Something happened in setting up the request that triggered an Error
+    //   else {
+    //     message = `Request Failed with Status Code ${status}. Request not sent to server!`;
+    //   }
+    // }
+    // else if (exception instanceof ZodError) {
+    //   status = HttpStatus.BAD_REQUEST;
+    //   message = 'Validation Error(s)';
+    //   data = {
+    //     type: 'zod', // Identifies this as a zod error for frontend containing issues
+    //     issues: exception?.issues,
+    //   };
+    // }
 
     const errorLog = {
       status,
@@ -65,7 +90,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     //TODO: Save Logs in File / DB
     //TODO: Error must have custom logger
-    //TODO: Other Error Type Implementations
+    //TODO: Catch Connection Errors
     //TODO: httpService (Axios Freeze)
 
     // Hide Database Details from the client
