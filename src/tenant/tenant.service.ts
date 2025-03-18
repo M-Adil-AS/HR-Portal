@@ -12,6 +12,8 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class TenantService {
+  private connections = new Map<string, DataSource>();
+
   constructor(
     @InjectRepository(Tenant, 'globalConnection')
     private tenantRepository: Repository<Tenant>,
@@ -86,6 +88,14 @@ export class TenantService {
   }
 
   async getTenantConnection(tenantId: string): Promise<DataSource> {
+    if (this.connections.has(tenantId)) {
+      const tenantConnection = this.connections.get(tenantId) as DataSource;
+
+      // Check for Connection is Stale or not
+      if (tenantConnection.isInitialized) return tenantConnection;
+      else this.connections.delete(tenantId);
+    }
+
     const tenantInfo: Pick<
       Tenant,
       'id' | 'dbName' | 'login' | 'encryptedPassword' | 'salt' | 'iv'
@@ -121,6 +131,7 @@ export class TenantService {
     });
 
     await tenantConnection.initialize();
+    this.connections.set(tenantId, tenantConnection);
 
     return tenantConnection;
   }
@@ -178,7 +189,7 @@ export class TenantService {
   }
 
   private async getOwnerConnection(): Promise<DataSource> {
-    // Create a new Owner Connection and destroy it in every request to avoid cross-request interference (i.e. DB switching)
+    // Create a new Owner Connection and destroy it in every request
 
     const ownerConnection = new DataSource({
       type: 'mssql',

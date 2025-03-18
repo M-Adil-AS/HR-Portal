@@ -45,6 +45,11 @@ import { HttpExceptionFilter } from './filters/http-exception.filter';
           },
           entities: [Company, Tenant], // Register your entities
           autoLoadEntities: false, // Because there will be multiple DB connections in our App and not every Entity belongs to Global Database.
+          extra: {
+            max: 20, // Max no. of connections made internally in TypeORM. As requests come in, it creates more connections up to the max value. Each request uses a separate connection. If capacity is reached, additional requests wait in a queue until a connection becomes available.
+            min: 5, // When initialized, it creates connections up to the min value. The minimum number of connections the pool will maintain even when idle.
+            idleTimeoutMillis: 60000, // Idle connections are closed after idleTimeoutMillis until reaching min
+          },
         };
       },
     }),
