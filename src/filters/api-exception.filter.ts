@@ -6,6 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
+import { AxiosError } from 'axios';
 import { Request, Response } from 'express';
 import { ErrorLog } from 'src/interfaces/error-log.interface';
 import { QueryFailedError } from 'typeorm';
@@ -60,24 +61,23 @@ export class ApiExceptionFilter implements ExceptionFilter {
           query: exception?.query || null, // Query Failed
         };
       }
+    } else if (exception instanceof AxiosError) {
+      // The request was made and the server responded with a non-2xx status code
+      if (exception?.response) {
+        status = exception?.response?.status;
+        message = `Request Failed with Status Code ${status}. ${exception?.response?.data['description'] || exception?.response?.data['message'] || ''}`;
+        data = exception?.response?.data;
+      }
+      // The request was made but no response was received
+      else if (exception?.request) {
+        message = `Request Failed with Status Code ${status}. No Response received from the server!`;
+        data = exception?.request;
+      }
+      // Something happened in setting up the request that triggered an Error
+      else {
+        message = `Request Failed with Status Code ${status}. Request not sent to server!`;
+      }
     }
-    // else if (exception instanceof AxiosError) {
-    //   // The request was made and the server responded with a non-2xx status code
-    //   if (exception?.response) {
-    //     status = exception?.response?.status;
-    //     message = `Request Failed with Status Code ${status}. ${exception?.response?.data['description'] || exception?.response?.data['message'] || ''}`;
-    //     data = exception?.response?.data;
-    //   }
-    //   // The request was made but no response was received
-    //   else if (exception?.request) {
-    //     message = `Request Failed with Status Code ${status}. No Response received from the server!`;
-    //     data = exception?.request;
-    //   }
-    //   // Something happened in setting up the request that triggered an Error
-    //   else {
-    //     message = `Request Failed with Status Code ${status}. Request not sent to server!`;
-    //   }
-    // }
     // else if (exception instanceof ZodError) {
     //   status = HttpStatus.BAD_REQUEST;
     //   message = 'Validation Error(s)';
@@ -99,7 +99,6 @@ export class ApiExceptionFilter implements ExceptionFilter {
 
     //TODO: Save Logs in File / DB
     //TODO: Error must have custom logger
-    //TODO: httpService (Axios Freeze)
 
     // Hide Database Details from the client
     const responseBody = {

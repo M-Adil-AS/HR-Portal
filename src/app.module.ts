@@ -20,6 +20,7 @@ import { UserModule } from './user/user.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ApiExceptionFilter } from './filters/api-exception.filter';
 import { GlobalConnectionInterceptor } from './interceptors/global-connection.interceptor';
+import { HttpClientModule } from './http-client/http-client.module';
 
 // Database Concepts:
 // Server-level role/permission (e.g. sysadmin) can be applied only to Logins, because Users do not exist at the server level.
@@ -67,6 +68,7 @@ import { GlobalConnectionInterceptor } from './interceptors/global-connection.in
 
     CompanyModule,
     UserModule,
+    HttpClientModule,
   ],
   controllers: [AppController],
   providers: [
