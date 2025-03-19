@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { Request, Response } from 'express';
+import { ErrorLog } from 'src/interfaces/error-log.interface';
 import { QueryFailedError } from 'typeorm';
 
 //TODO: After all the types, is it supposed to be HttpExceptionFilter or Global?
@@ -25,7 +26,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     let status: number = HttpStatus.INTERNAL_SERVER_ERROR; // Default Error Status
     let message: string = exception?.['message'] || 'Internal Server Error'; // Default Error Message
-    let data: object | null = null; // Default Error Data
+    let data: Record<string, any> | null = null; // Default Error Data
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
@@ -44,6 +45,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
         // General Query Error (e.g., syntax, constraint violations)
         status = HttpStatus.BAD_REQUEST; // 400 Bad Request
         message = 'Database Query Error';
+        data = {
+          error:
+            driverError?.originalError?.info?.message || exception?.message, // DB Error specific details
+          code: driverError?.code || null, // DB Error Code
+          query: exception?.query || null, // Query Failed
+        };
+      } else if (driverError?.code === 'ESOCKET') {
+        // Connection Error
+        status = HttpStatus.SERVICE_UNAVAILABLE;
+        message = 'Database Connection Error';
         data = {
           error:
             driverError?.originalError?.info?.message || exception?.message, // DB Error specific details
@@ -78,7 +89,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     //   };
     // }
 
-    const errorLog = {
+    const errorLog: ErrorLog = {
       status,
       message,
       data,
@@ -90,7 +101,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     //TODO: Save Logs in File / DB
     //TODO: Error must have custom logger
-    //TODO: Catch Connection Errors
     //TODO: httpService (Axios Freeze)
 
     // Hide Database Details from the client
