@@ -18,7 +18,7 @@ import { Company } from './company/company.entity';
 import { Tenant } from './tenant/tenant.entity';
 import { UserModule } from './user/user.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { HttpExceptionFilter } from './filters/http-exception.filter';
+import { ApiExceptionFilter } from './filters/api-exception.filter';
 import { GlobalConnectionInterceptor } from './interceptors/global-connection.interceptor';
 
 // Database Concepts:
@@ -97,7 +97,7 @@ import { GlobalConnectionInterceptor } from './interceptors/global-connection.in
       provide: APP_FILTER,
       inject: [HttpAdapterHost], // Inject HttpAdapterHost. To make Exception Filter platform generic (Express/Fastify)
       useFactory: (httpAdapterHost: HttpAdapterHost) => {
-        return new HttpExceptionFilter(httpAdapterHost);
+        return new ApiExceptionFilter(httpAdapterHost);
       },
     },
     {

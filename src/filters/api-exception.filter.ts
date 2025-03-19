@@ -10,10 +10,8 @@ import { Request, Response } from 'express';
 import { ErrorLog } from 'src/interfaces/error-log.interface';
 import { QueryFailedError } from 'typeorm';
 
-//TODO: After all the types, is it supposed to be HttpExceptionFilter or Global?
-
 @Catch()
-export class HttpExceptionFilter implements ExceptionFilter {
+export class ApiExceptionFilter implements ExceptionFilter {
   constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
