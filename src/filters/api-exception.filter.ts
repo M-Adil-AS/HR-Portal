@@ -93,6 +93,7 @@ export class ApiExceptionFilter implements ExceptionFilter {
       data,
       timestamp: new Date().toISOString(),
       path: httpAdapter.getRequestUrl(request),
+      request_body: request?.body ? JSON.stringify(request?.body) : null,
     };
 
     console.error(errorLog);

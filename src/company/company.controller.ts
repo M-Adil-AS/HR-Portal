@@ -5,7 +5,6 @@ import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { CompanyDto } from './dtos/company.dto';
 
 //TODO: Apply Versioning
-//TODO: AsyncWrapper needed or will a Interceptor
 @Controller('company')
 export class CompanyController {
   constructor(private companyService: CompanyService) {}
