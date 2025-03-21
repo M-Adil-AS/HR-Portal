@@ -4,7 +4,6 @@ import { CompanyService } from './company.service';
 import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { CompanyDto } from './dtos/company.dto';
 
-//TODO: Apply Versioning
 @Controller('company')
 export class CompanyController {
   constructor(private companyService: CompanyService) {}
