@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Version } from '@nestjs/common';
 import { RegisterCompanyDto } from './dtos/register-company.dto';
 import { CompanyService } from './company.service';
 import { Serialize } from 'src/interceptors/serialize.interceptor';
@@ -11,6 +11,7 @@ export class CompanyController {
 
   //TODO: Add Captcha
   @Serialize(CompanyDto)
+  @Version('1')
   @Post()
   async registerCompany(@Body() body: RegisterCompanyDto) {
     const company = await this.companyService.register(body);

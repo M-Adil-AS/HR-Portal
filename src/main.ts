@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
-import { HttpStatus, Logger } from '@nestjs/common';
+import { HttpStatus, Logger, VersioningType } from '@nestjs/common';
 import { ErrorLog } from './interfaces/error-log.interface';
 
 async function bootstrap() {
@@ -9,6 +9,11 @@ async function bootstrap() {
 
   try {
     const app = await NestFactory.create(AppModule, { abortOnError: false });
+
+    app.setGlobalPrefix('api');
+    app.enableVersioning({
+      type: VersioningType.URI,
+    });
 
     const configService = app.get(ConfigService);
     const port: number = Number(configService.get('PORT', 3000));
