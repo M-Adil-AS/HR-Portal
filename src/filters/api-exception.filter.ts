@@ -4,6 +4,7 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { AxiosError } from 'axios';
@@ -13,6 +14,8 @@ import { QueryFailedError } from 'typeorm';
 
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(ApiExceptionFilter.name);
+
   constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
@@ -96,10 +99,9 @@ export class ApiExceptionFilter implements ExceptionFilter {
       request_body: request?.body ? JSON.stringify(request?.body) : null,
     };
 
-    console.error(errorLog);
+    this.logger.error(errorLog);
 
     //TODO: Save Logs in File / DB
-    //TODO: Error must have custom logger
 
     // Hide Database Details from the client
     const responseBody = {

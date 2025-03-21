@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityTarget, ObjectLiteral, Repository } from 'typeorm';
 import { Tenant } from './tenant.entity';
@@ -13,6 +13,7 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class TenantService {
   private connections = new Map<string, DataSource>();
+  private readonly logger = new Logger(TenantService.name);
 
   constructor(
     @InjectRepository(Tenant, 'globalConnection')
@@ -70,7 +71,10 @@ export class TenantService {
           END
         `);
       } catch (cleanupError) {
-        console.log('Create Tenant Database Cleanup Error: ', cleanupError); // Log the cleanup Error
+        this.logger.error(
+          'Create Tenant Database Cleanup Error: ',
+          cleanupError,
+        ); // Log the cleanup Error
       }
 
       throw error; // Throw the original Error
@@ -182,7 +186,7 @@ export class TenantService {
         DROP LOGIN [Tenant_${dbName}_Login];
     `);
     } catch (cleanupError) {
-      console.log('Delete Tenant Database Cleanup Error: ', cleanupError); // Log the cleanup Error
+      this.logger.error('Delete Tenant Database Cleanup Error: ', cleanupError); // Log the cleanup Error
     } finally {
       if (ownerConnection) await ownerConnection.destroy();
     }

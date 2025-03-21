@@ -1,10 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
-import { HttpStatus } from '@nestjs/common';
+import { HttpStatus, Logger } from '@nestjs/common';
 import { ErrorLog } from './interfaces/error-log.interface';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
+
   try {
     const app = await NestFactory.create(AppModule, { abortOnError: false });
 
@@ -33,7 +35,7 @@ async function bootstrap() {
       };
     }
 
-    console.error(errorLog);
+    logger.error(errorLog);
   }
 }
 bootstrap();

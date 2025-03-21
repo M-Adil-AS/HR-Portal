@@ -4,6 +4,7 @@ import {
   CallHandler,
   Injectable,
   ServiceUnavailableException,
+  Logger,
 } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { Observable } from 'rxjs';
@@ -11,6 +12,8 @@ import { DataSource } from 'typeorm';
 
 @Injectable()
 export class GlobalConnectionInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(GlobalConnectionInterceptor.name);
+
   constructor(
     @InjectDataSource('globalConnection')
     private globalConnection: DataSource,
@@ -26,7 +29,7 @@ export class GlobalConnectionInterceptor implements NestInterceptor {
       try {
         await this.globalConnection.initialize();
       } catch (error) {
-        console.error('Failed to initialize global connection', error);
+        this.logger.error('Failed to initialize global connection', error);
         throw new ServiceUnavailableException('Connection Failed!');
       }
     }
