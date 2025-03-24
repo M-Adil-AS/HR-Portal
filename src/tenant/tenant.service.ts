@@ -141,6 +141,8 @@ export class TenantService {
   }
 
   async createTenantTables(tenantConnection: DataSource) {
+    //TODO: Implement proper Role Permissions System for Users
+
     await tenantConnection.query(`
       CREATE TABLE Users (
         id VARCHAR(100) PRIMARY KEY DEFAULT NEWID(),

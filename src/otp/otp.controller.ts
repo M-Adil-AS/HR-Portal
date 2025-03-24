@@ -14,11 +14,11 @@ export class OtpController {
   @Throttle({ default: { limit: 1, ttl: 60000 } }) // One request per minute
   @Post('generate/company')
   async generateCompanyOtp(@Body() body: CompanyOtpRequestDto) {
-    const otp = await this.otpService.generateOtp(body?.email);
+    await this.otpService.generateOtp(body?.email);
 
     return {
-      data: { otp },
-      message: 'OTP Generated!',
+      data: null,
+      message: 'Please check your Inbox and Enter OTP Code!',
     };
   }
 
@@ -27,11 +27,11 @@ export class OtpController {
   @Throttle({ default: { limit: 1, ttl: 60000 } }) // One request per minute
   @Post('generate')
   async generateOtp(@Body() body: OtpRequestDto) {
-    const otp = await this.otpService.generateOtp(body?.email);
+    await this.otpService.generateOtp(body?.email);
 
     return {
-      data: { otp },
-      message: 'OTP Generated!',
+      data: null,
+      message: 'Please check your Inbox and Enter OTP Code!',
     };
   }
 

@@ -12,21 +12,20 @@ import * as crypto from 'crypto';
 export class OtpService {
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 
-  async generateOtp(email: string): Promise<string> {
+  async generateOtp(email: string): Promise<void> {
     await this.checkCooldown(email); // Check email-based cooldown first
 
     const otp: string = crypto.randomInt(100000, 999999).toString(); // 6-digit OTP
+
+    //TODO: Send Email & Implement proper Notifications System
 
     await Promise.all([
       this.cacheManager.set(`otp:${email}`, otp, 1000 * 60 * 5), // Store OTP for 5 min
       this.setCooldown(email), // Set 1 min email-based cooldown after generating OTP
       this.resetFailedAttempts(email), // Reset previous OTP Failed Attempts Counter if exists
     ]);
-
-    return otp;
   }
 
-  //TODO: Stores under what CacheKey? Does this case need a CacheKey based on email or not?
   async verifyOtp(email: string, inputOTP: string): Promise<void> {
     await this.checkFailedAttempts(email); // Check for too many failed attempts
 
