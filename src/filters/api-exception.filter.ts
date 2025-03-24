@@ -80,6 +80,20 @@ export class ApiExceptionFilter implements ExceptionFilter {
       else {
         message = `Request Failed with Status Code ${status}. Request not sent to server!`;
       }
+    } else if (exception instanceof AggregateError) {
+      if (exception?.['code'] === 'ECONNREFUSED') {
+        status = HttpStatus.SERVICE_UNAVAILABLE;
+        message = 'Service Unavailable';
+        data = {
+          error: exception?.['errors'].map((error) => {
+            return {
+              address: error?.['address'],
+              port: error?.['port'],
+            };
+          }),
+          code: exception?.['code'],
+        };
+      }
     }
     // else if (exception instanceof ZodError) {
     //   status = HttpStatus.BAD_REQUEST;
@@ -103,12 +117,17 @@ export class ApiExceptionFilter implements ExceptionFilter {
 
     //TODO: Save Logs in File / DB
 
-    // Hide Database Details from the client
+    // Hide Sensitive Details (Database / Network) from the client
+    const sensitiveErrorTypes = [QueryFailedError, AggregateError];
+    const isSensitiveError = sensitiveErrorTypes.some(
+      (errorType) => exception instanceof errorType,
+    );
+
     const responseBody = {
-      message: !(exception instanceof QueryFailedError)
+      message: !isSensitiveError
         ? message
         : 'Something went wrong while processing your request',
-      data: !(exception instanceof QueryFailedError) ? data : null,
+      data: !isSensitiveError ? data : null,
     };
 
     httpAdapter.reply(response, responseBody, status);

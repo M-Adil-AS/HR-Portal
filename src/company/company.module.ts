@@ -4,6 +4,7 @@ import { CompanyService } from './company.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Company } from './company.entity';
 import { TenantModule } from 'src/tenant/tenant.module';
+import { OtpModule } from 'src/otp/otp.module';
 
 @Module({
   controllers: [CompanyController],
@@ -11,6 +12,7 @@ import { TenantModule } from 'src/tenant/tenant.module';
   imports: [
     TypeOrmModule.forFeature([Company], 'globalConnection'),
     TenantModule,
+    OtpModule,
   ],
 })
 export class CompanyModule {}

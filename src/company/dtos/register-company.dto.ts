@@ -15,6 +15,7 @@ export class RegisterCompanyDto {
     message: 'Company Name must be between 3 and 50 characters',
   })
   // Type check inside Transform because Transform runs before other checks
+  //TODO: Do we have to @Transform in all entities for all string?
   @Transform(({ value }) =>
     typeof value === 'string' ? value?.trim()?.toLowerCase() : value,
   )

@@ -10,6 +10,7 @@ import { CompanyModule } from './company/company.module';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import {
   APP_FILTER,
+  APP_GUARD,
   APP_INTERCEPTOR,
   APP_PIPE,
   HttpAdapterHost,
@@ -20,8 +21,11 @@ import { UserModule } from './user/user.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ApiExceptionFilter } from './filters/api-exception.filter';
 import { GlobalConnectionInterceptor } from './interceptors/global-connection.interceptor';
-import { HttpClientModule } from './http-client/http-client.module';
 import { AppInterceptor } from './interceptors/app.interceptor';
+import { CacheModule } from '@nestjs/cache-manager';
+import { createKeyv } from '@keyv/redis';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { AppThrottlerGuard } from './guards/app-throttler.guard';
 
 // Database Concepts:
 // Server-level role/permission (e.g. sysadmin) can be applied only to Logins, because Users do not exist at the server level.
@@ -30,11 +34,11 @@ import { AppInterceptor } from './interceptors/app.interceptor';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,
       // NODE_ENV altered in package.json OR on deployment platform.
       // On deployed version, setting NODE_ENV on platform will override the NODE_ENV from build -> start:prod commands in package.json
       // If the file does not exist, ConfigModule will still load environment variables from process.env (which are set on the platform)
       envFilePath: `.env.${process.env.NODE_ENV}`,
+      isGlobal: true,
       cache: true,
     }),
     TypeOrmModule.forRootAsync({
@@ -66,10 +70,28 @@ import { AppInterceptor } from './interceptors/app.interceptor';
         };
       },
     }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => {
+        return {
+          stores: [createKeyv(configService.get<string>('REDIS_URL'))],
+          ttl: 1000 * 60 * 5, // 5 minutes default ttl for all entries of every store
+        };
+      },
+    }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000, // Default TTL. 10 requests per minute per IP
+          limit: 10,
+        },
+      ],
+    }),
 
     CompanyModule,
-    UserModule,
-    HttpClientModule,
+    UserModule, //TODO: Maybe it should be in imports of CompanyModule
   ],
   controllers: [AppController],
   providers: [
@@ -110,6 +132,10 @@ import { AppInterceptor } from './interceptors/app.interceptor';
     {
       provide: APP_INTERCEPTOR,
       useClass: AppInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: AppThrottlerGuard,
     },
   ],
 })
