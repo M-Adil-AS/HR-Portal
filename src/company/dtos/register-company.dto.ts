@@ -35,5 +35,5 @@ export class RegisterCompanyDto {
       ? validator.normalizeEmail(value?.trim()?.toLowerCase())
       : value,
   )
-  adminEmail: string;
+  email: string;
 }

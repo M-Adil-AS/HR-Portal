@@ -145,7 +145,6 @@ export class TenantService {
       CREATE TABLE Users (
         id VARCHAR(100) PRIMARY KEY DEFAULT NEWID(),
         email VARCHAR(100) UNIQUE NOT NULL CHECK (LEN(email) BETWEEN 6 AND 100),
-        role VARCHAR(50) NOT NULL CHECK (LEN(role) BETWEEN 2 AND 50),
         createdAt DATETIME DEFAULT GETDATE()
       );
     `);

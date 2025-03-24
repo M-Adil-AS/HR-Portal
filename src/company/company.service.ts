@@ -17,8 +17,8 @@ export class CompanyService {
     private readonly userService: UserService,
   ) {}
 
-  async register({ companyName, adminEmail }: RegisterCompanyDto) {
-    const domain = adminEmail.split('@')[1];
+  async register({ companyName, email }: RegisterCompanyDto) {
+    const domain = email.split('@')[1];
 
     const companyAlreadyExists = await this.companyRepository.findOne({
       where: [{ name: companyName }, { domain }],
@@ -60,10 +60,7 @@ export class CompanyService {
       await this.tenantService.createTenantTables(tenantConnection);
 
       // Insert Admin User into User Table of Tenant DB
-      await this.userService.createAdminUserForTenant(
-        tenantConnection,
-        adminEmail,
-      );
+      await this.userService.createAdminUserForTenant(tenantConnection, email);
 
       return company;
     } catch (error) {

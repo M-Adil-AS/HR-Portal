@@ -10,7 +10,7 @@ export class UserService {
   ): Promise<User> {
     const userRepository = tenantConnection.getRepository(User);
 
-    let user = userRepository.create({ email, role: 'Admin' });
+    let user = userRepository.create({ email });
     user = await userRepository.save(user);
 
     return user;
