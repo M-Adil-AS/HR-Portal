@@ -16,10 +16,12 @@ export class OtpService {
     await this.checkCooldown(email); // Check email-based cooldown first
 
     const otp: string = crypto.randomInt(100000, 999999).toString(); // 6-digit OTP
-    await this.cacheManager.set(`otp:${email}`, otp, 1000 * 60 * 5); // Store OTP for 5 min
 
-    await this.setCooldown(email); // Set 1 min email-based cooldown after generating OTP
-    await this.resetFailedAttempts(email); // Reset previous OTP Failed Attempts Counter if exists
+    await Promise.all([
+      this.cacheManager.set(`otp:${email}`, otp, 1000 * 60 * 5), // Store OTP for 5 min
+      this.setCooldown(email), // Set 1 min email-based cooldown after generating OTP
+      this.resetFailedAttempts(email), // Reset previous OTP Failed Attempts Counter if exists
+    ]);
 
     return otp;
   }
@@ -49,10 +51,11 @@ export class OtpService {
     const match = crypto.timingSafeEqual(inputBuffer, storedBuffer);
 
     if (match) {
-      //TODO: Promise.all?
-      await this.cacheManager.set(`otp:${email}`, null, 0); // .del Method not working in Redis older version. Hence Workaround
-      await this.resetFailedAttempts(email); // On successful verification, reset failed attempts
-      await this.resetCooldown(email); // On successful verification, clear the generate otp cooldown
+      await Promise.all([
+        this.cacheManager.set(`otp:${email}`, null, 0), // .del Method not working in Redis older version. Hence Workaround
+        this.resetFailedAttempts(email), // On successful verification, reset failed attempts
+        this.resetCooldown(email), // On successful verification, clear the generate otp cooldown
+      ]);
     } else {
       await this.incrementFailedAttempts(email);
       throw new UnauthorizedException('Invalid or expired OTP!');
