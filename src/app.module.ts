@@ -17,7 +17,6 @@ import {
 } from '@nestjs/core';
 import { Company } from './company/company.entity';
 import { Tenant } from './tenant/tenant.entity';
-import { UserModule } from './user/user.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ApiExceptionFilter } from './filters/api-exception.filter';
 import { GlobalConnectionInterceptor } from './interceptors/global-connection.interceptor';
@@ -91,7 +90,6 @@ import { AppThrottlerGuard } from './guards/app-throttler.guard';
     }),
 
     CompanyModule,
-    UserModule, //TODO: Maybe it should be in imports of CompanyModule
   ],
   controllers: [AppController],
   providers: [

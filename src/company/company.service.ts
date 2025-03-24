@@ -4,8 +4,8 @@ import { Company } from './company.entity';
 import { Repository } from 'typeorm';
 import { RegisterCompanyDto } from './dtos/register-company.dto';
 import { TenantService } from 'src/tenant/tenant.service';
-import { User } from 'src/user/user.entity';
 import { TenantCredentials } from 'src/tenant/interfaces/tenantCredentials.interface';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class CompanyService {
@@ -14,6 +14,7 @@ export class CompanyService {
     private companyRepository: Repository<Company>,
 
     private readonly tenantService: TenantService,
+    private readonly userService: UserService,
   ) {}
 
   async register({ companyName, adminEmail }: RegisterCompanyDto) {
@@ -59,12 +60,10 @@ export class CompanyService {
       await this.tenantService.createTenantTables(tenantConnection);
 
       // Insert Admin User into User Table of Tenant DB
-      const userRepository = await this.tenantService.getTenantRepository(
-        User,
+      await this.userService.createAdminUserForTenant(
         tenantConnection,
+        adminEmail,
       );
-      const user = userRepository.create({ email: adminEmail, role: 'Admin' });
-      await userRepository.save(user);
 
       return company;
     } catch (error) {

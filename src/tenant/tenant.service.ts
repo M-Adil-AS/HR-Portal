@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityTarget, ObjectLiteral, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Tenant } from './tenant.entity';
 import { User } from 'src/user/user.entity';
 import {
@@ -160,13 +160,6 @@ export class TenantService {
     if (!tenant) throw new NotFoundException('Tenant not Found!');
 
     return tenant;
-  }
-
-  async getTenantRepository<Entity extends ObjectLiteral>(
-    entity: EntityTarget<Entity>,
-    tenantConnection: DataSource,
-  ): Promise<Repository<Entity>> {
-    return tenantConnection.getRepository(entity);
   }
 
   async deleteTenantDatabase(dbName: string) {

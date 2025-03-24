@@ -49,6 +49,7 @@ export class OtpService {
     const match = crypto.timingSafeEqual(inputBuffer, storedBuffer);
 
     if (match) {
+      //TODO: Promise.all?
       await this.cacheManager.set(`otp:${email}`, null, 0); // .del Method not working in Redis older version. Hence Workaround
       await this.resetFailedAttempts(email); // On successful verification, reset failed attempts
       await this.resetCooldown(email); // On successful verification, clear the generate otp cooldown
