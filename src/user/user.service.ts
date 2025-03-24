@@ -6,11 +6,11 @@ import { User } from './user.entity';
 export class UserService {
   async createAdminUserForTenant(
     tenantConnection: DataSource,
-    adminEmail: string,
+    email: string,
   ): Promise<User> {
     const userRepository = tenantConnection.getRepository(User);
 
-    let user = userRepository.create({ email: adminEmail, role: 'Admin' });
+    let user = userRepository.create({ email, role: 'Admin' });
     user = await userRepository.save(user);
 
     return user;
