@@ -5,6 +5,9 @@ export function generateRandomPassword(length = 16): string {
   return crypto.randomBytes(length).toString('hex').slice(0, length);
 }
 
+//TODO: Move global in env
+//TODO: Compare against algo in docs
+
 const ALGORITHM = 'aes-256-cbc'; // AES encryption algorithm
 const ITERATIONS = 10000; // PBKDF2 iteration count (higher = more secure)
 const KEY_LENGTH = 32; // 256-bit key

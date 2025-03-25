@@ -1,19 +1,14 @@
-import { Transform } from 'class-transformer';
 import { IsEmail, IsString, Length, Matches } from 'class-validator';
-import validator from 'validator';
+import { NormalizeEmail } from 'src/decorators/transformers';
+import { TrimAndLowerCase } from 'src/decorators/transformers';
 
 export class VerifyOtpDto {
   @IsEmail({}, { message: 'Invalid email format' })
   @Length(6, 100, {
     message: 'Email must be between 6 and 100 characters',
   })
-  // Type check inside Transform because Transform runs before other checks
-  // Normalize and sanitize email
-  @Transform(({ value }) =>
-    typeof value === 'string'
-      ? validator.normalizeEmail(value?.trim()?.toLowerCase())
-      : value,
-  )
+  @TrimAndLowerCase() // Type check inside TrimAndLowerCase() because Transform runs before other Validator checks
+  @NormalizeEmail() // Normalize and sanitize email. Transformers are executed in order (TrimAndLowerCase first then NormalizeEmail)
   email: string;
 
   @IsString({ message: 'OTP must be a string' })

@@ -10,15 +10,15 @@ import { tap, catchError } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
-export class AppInterceptor implements NestInterceptor {
-  private readonly logger = new Logger(AppInterceptor.name);
+export class AuditLogInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(AuditLogInterceptor.name);
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, handler: CallHandler): Observable<any> {
     // Do something before route handler runs
     const request = context.switchToHttp().getRequest();
     const { method, url, body, query } = request;
 
-    return next.handle().pipe(
+    return handler.handle().pipe(
       tap((response) => {
         // Audit Logs Handling
         const AUDIT_LOG_METHODS = ['POST', 'PATCH', 'PUT', 'DELETE'];

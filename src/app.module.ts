@@ -20,7 +20,7 @@ import { Tenant } from './tenant/tenant.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ApiExceptionFilter } from './filters/api-exception.filter';
 import { GlobalConnectionInterceptor } from './interceptors/global-connection.interceptor';
-import { AppInterceptor } from './interceptors/app.interceptor';
+import { AuditLogInterceptor } from './interceptors/audit-log.interceptor';
 import { CacheModule } from '@nestjs/cache-manager';
 import { createKeyv } from '@keyv/redis';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -129,7 +129,7 @@ import { AppThrottlerGuard } from './guards/app-throttler.guard';
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: AppInterceptor,
+      useClass: AuditLogInterceptor,
     },
     {
       provide: APP_GUARD,
