@@ -1,1 +1,1 @@
-export * from './company-domain.validator';
+export * from './company-domain.decorator';

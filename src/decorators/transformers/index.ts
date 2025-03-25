@@ -1,2 +1,2 @@
-export * from './trim-lowercase.transformer';
-export * from './normalize-email.transformer';
+export * from './trim-lowercase.decorator';
+export * from './normalize-email.decorator';

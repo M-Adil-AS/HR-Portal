@@ -1,7 +1,7 @@
 import { Body, Controller, Post, Version } from '@nestjs/common';
 import { RegisterCompanyDto } from './dtos/register-company.dto';
 import { CompanyService } from './company.service';
-import { Serialize } from 'src/interceptors/serialize.interceptor';
+import { Serialize } from 'src/decorators/interceptors';
 import { CompanyDto } from './dtos/company.dto';
 
 @Controller('company')
