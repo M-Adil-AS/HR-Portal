@@ -3,12 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Tenant } from './tenant.entity';
 import { User } from 'src/user/user.entity';
-import {
-  decryptPassword,
-  encryptPassword,
-  generateRandomPassword,
-} from 'src/utils/security';
+import { generateRandomString } from 'src/utils/crypto';
 import { ConfigService } from '@nestjs/config';
+import { CryptoService } from 'src/crypto/crypto.service';
 
 @Injectable()
 export class TenantService {
@@ -19,19 +16,19 @@ export class TenantService {
     @InjectRepository(Tenant, 'globalConnection')
     private tenantRepository: Repository<Tenant>,
 
-    private configService: ConfigService,
+    private readonly configService: ConfigService,
+    private readonly cryptoService: CryptoService,
   ) {}
 
   async createTenantDatabase(dbName: string) {
     // Using Owner Login to create Tenant DBs instead of Global Login so that it doesn't become their owner and access/alter them
     const ownerConnection = await this.getOwnerConnection();
 
-    const tenantLoginPassword = generateRandomPassword(); // Generate dynamic password
+    const tenantLoginPassword = generateRandomString(); // Generate dynamic password
 
-    const { encryptedPassword, salt, iv } = encryptPassword(
+    const { encryptedPassword, salt, iv } = this.cryptoService.encryptPassword(
       tenantLoginPassword,
       dbName,
-      this.configService.get<string>('ENCRYPTION_SECRET') as string,
     );
 
     try {
@@ -105,12 +102,11 @@ export class TenantService {
       'id' | 'dbName' | 'login' | 'encryptedPassword' | 'salt' | 'iv'
     > = await this.getTenantDBCredentials(tenantId);
 
-    const decryptedPassword = decryptPassword(
+    const decryptedPassword = this.cryptoService.decryptPassword(
       tenantInfo.encryptedPassword,
       tenantInfo.dbName,
       tenantInfo.salt,
       tenantInfo.iv,
-      this.configService.get<string>('ENCRYPTION_SECRET') as string,
     );
 
     const tenantConnection = new DataSource({
