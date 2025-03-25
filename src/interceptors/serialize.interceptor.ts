@@ -16,6 +16,8 @@ interface ClassConstructor {
 // ClassSerializerInterceptor + @SeralizeOptions({type: DTO}) works even if a raw plain object is returned from route handler and hence does not need constructor function in DTO class.
 // ClassSerializerInterceptor + @SeralizeOptions({type: DTO}) are two lines of code, that's why custom SerializeInterceptor is better approach (works even if a raw plain object is returned from route handler and hence does not need constructor function in DTO class).
 
+//TODO: Move Serialize to decorators folder?
+
 export function Serialize(dto: ClassConstructor) {
   return UseInterceptors(new SerializeInterceptor(dto));
 }
