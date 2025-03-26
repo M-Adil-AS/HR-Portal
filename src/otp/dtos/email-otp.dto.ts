@@ -2,7 +2,7 @@ import { IsEmail, Length } from 'class-validator';
 import { NormalizeEmail } from 'src/decorators/transformers';
 import { TrimAndLowerCase } from 'src/decorators/transformers';
 
-export class OtpRequestDto {
+export class EmailOtpDto {
   @IsEmail({}, { message: 'Invalid email format' })
   @Length(6, 100, {
     message: 'Email must be between 6 and 100 characters',

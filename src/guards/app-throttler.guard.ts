@@ -14,13 +14,14 @@ export class AppThrottlerGuard extends ThrottlerGuard {
     const request = context.switchToHttp().getRequest();
     const url = request.url;
 
-    if (url.includes('/otp/generate')) {
-      throw new ThrottlerException(
-        'Please wait at least 60 seconds before requesting another OTP!',
-      );
-    } else if (url.includes('/otp/verify')) {
+    if (url.includes('/otp/verify')) {
       throw new ThrottlerException(
         'Too many verification attempts. Please try again later!',
+      );
+    } else if (/\/otp\/.+/.test(url)) {
+      // any other word after /otp/
+      throw new ThrottlerException(
+        'Please wait at least 60 seconds before requesting another OTP!',
       );
     } else {
       throw new ThrottlerException(

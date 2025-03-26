@@ -2,6 +2,19 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 
+/*
+  Instead of modifying service-level defaults (e.g. global headers, responseType) for every request:
+  - Set default values once so that most requests use them.
+  - Use per-request overrides for exceptional cases where different values are needed.
+  - Avoid unnecessary modifications to defaults to prevent unintended side effects.
+
+  If a few groups of related requests require different defaults (e.g. different headers or responseType):
+  - Consider creating separate services within the http-client module, each with its own defaults.
+
+  If every request requires different defaults (e.g. different headers or responseType):
+  - Do not set service defaults, instead pass per-request values for all requests
+*/
+
 @Injectable()
 export class HttpClientService {
   constructor(private readonly httpService: HttpService) {

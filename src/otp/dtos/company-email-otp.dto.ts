@@ -3,7 +3,7 @@ import { NormalizeEmail } from 'src/decorators/transformers';
 import { TrimAndLowerCase } from 'src/decorators/transformers';
 import { IsCompanyDomain } from 'src/decorators/validators';
 
-export class CompanyOtpRequestDto {
+export class CompanyEmailOtpDto {
   @IsEmail({}, { message: 'Invalid email format' })
   @IsCompanyDomain({
     message: 'Please use the company email, not a personal email',

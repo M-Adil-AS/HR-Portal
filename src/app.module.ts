@@ -69,6 +69,7 @@ import { AppThrottlerGuard } from './guards/app-throttler.guard';
         };
       },
     }),
+    //TODO: Maybe have an interceptor which checks redis connection
     CacheModule.registerAsync({
       isGlobal: true,
       imports: [ConfigModule],

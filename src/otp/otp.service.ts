@@ -8,33 +8,46 @@ import {
 import { Cache } from 'cache-manager';
 import * as crypto from 'crypto';
 
+/*
+  Throttling only rate-limits the requests per IP-basis
+  Same recipient can issueOtp or verifyOtp multiple times if IP is different in every request
+  Hence rate liming is applied per recipeint-basis
+*/
+
 @Injectable()
 export class OtpService {
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 
-  async generateOtp(email: string): Promise<void> {
-    await this.checkCooldown(email); // Check email-based cooldown first
+  async issueOtp(
+    type: 'email' | 'phone' | 'push',
+    recipient: string,
+  ): Promise<string> {
+    await this.checkCooldown(recipient); // Check recipeint-based (email/phone/push) cooldown first
 
     const otp: string = crypto.randomInt(100000, 999999).toString(); // 6-digit OTP
 
-    //TODO: Send Email & Implement proper Notifications System
+    //TODO: Implement proper Notification System and send Notification based on type
+    if (type === 'email') {
+    }
 
     await Promise.all([
-      this.cacheManager.set(`otp:${email}`, otp, 1000 * 60 * 5), // Store OTP for 5 min
-      this.setCooldown(email), // Set 1 min email-based cooldown after generating OTP
-      this.resetFailedAttempts(email), // Reset previous OTP Failed Attempts Counter if exists
+      this.cacheManager.set(`otp:${recipient}`, otp, 1000 * 60 * 5), // Store OTP for 5 min
+      this.setCooldown(recipient), // Set 1 min recipeint-based (email/phone/push) cooldown after generating OTP
+      this.resetFailedAttempts(recipient), // Reset previous OTP Failed Attempts Counter if exists
     ]);
+
+    return otp;
   }
 
-  async verifyOtp(email: string, inputOTP: string): Promise<void> {
-    await this.checkFailedAttempts(email); // Check for too many failed attempts
+  async verifyOtp(recipient: string, inputOTP: string): Promise<void> {
+    await this.checkFailedAttempts(recipient); // Check for too many failed attempts
 
     const storedOTP: string | null = await this.cacheManager.get(
-      `otp:${email}`,
+      `otp:${recipient}`,
     );
 
     if (!storedOTP) {
-      await this.incrementFailedAttempts(email);
+      await this.incrementFailedAttempts(recipient);
       throw new UnauthorizedException('Invalid or expired OTP!');
     }
 
@@ -43,7 +56,7 @@ export class OtpService {
     const storedBuffer = Buffer.from(storedOTP);
 
     if (inputBuffer.length !== storedBuffer.length) {
-      await this.incrementFailedAttempts(email);
+      await this.incrementFailedAttempts(recipient);
       throw new UnauthorizedException('Invalid or expired OTP!');
     }
 
@@ -51,18 +64,18 @@ export class OtpService {
 
     if (match) {
       await Promise.all([
-        this.cacheManager.set(`otp:${email}`, null, 0), // .del Method not working in Redis older version. Hence Workaround
-        this.resetFailedAttempts(email), // On successful verification, reset failed attempts
-        this.resetCooldown(email), // On successful verification, clear the generate otp cooldown
+        this.cacheManager.set(`otp:${recipient}`, null, 0), // .del Method not working in Redis older version. Hence Workaround
+        this.resetFailedAttempts(recipient), // On successful verification, reset failed attempts
+        this.resetCooldown(recipient), // On successful verification, clear the generate otp cooldown
       ]);
     } else {
-      await this.incrementFailedAttempts(email);
+      await this.incrementFailedAttempts(recipient);
       throw new UnauthorizedException('Invalid or expired OTP!');
     }
   }
 
-  private async checkCooldown(email: string): Promise<void> {
-    const cooldownKey = `cooldown:${email}`;
+  private async checkCooldown(recipient: string): Promise<void> {
+    const cooldownKey = `cooldown:${recipient}`;
     const hasActiveCooldown: string | null =
       await this.cacheManager.get(cooldownKey);
 
@@ -73,22 +86,22 @@ export class OtpService {
     }
   }
 
-  private async setCooldown(email: string): Promise<void> {
-    const cooldownKey = `cooldown:${email}`;
+  private async setCooldown(recipient: string): Promise<void> {
+    const cooldownKey = `cooldown:${recipient}`;
     await this.cacheManager.set(cooldownKey, true, 1000 * 60); // Set Cooldown for 1 min
   }
 
-  private async resetCooldown(email: string): Promise<void> {
-    const cooldownKey = `cooldown:${email}`;
+  private async resetCooldown(recipient: string): Promise<void> {
+    const cooldownKey = `cooldown:${recipient}`;
     await this.cacheManager.set(cooldownKey, null, 0); // Clear the generate otp cooldown
   }
 
-  private async checkFailedAttempts(email: string): Promise<void> {
-    const attemptsKey = `otp-attempts:${email}`;
+  private async checkFailedAttempts(recipient: string): Promise<void> {
+    const attemptsKey = `otp-attempts:${recipient}`;
     const attempts: number = (await this.cacheManager.get(attemptsKey)) || 0;
 
     if (attempts >= 5) {
-      await this.resetCooldown(email); // Clear the generate otp cooldown
+      await this.resetCooldown(recipient); // Clear the generate otp cooldown
 
       throw new UnauthorizedException(
         'Too many failed attempts. Please request a new OTP.',
@@ -96,15 +109,15 @@ export class OtpService {
     }
   }
 
-  private async incrementFailedAttempts(email: string): Promise<void> {
-    const attemptsKey = `otp-attempts:${email}`;
+  private async incrementFailedAttempts(recipient: string): Promise<void> {
+    const attemptsKey = `otp-attempts:${recipient}`;
     const attempts: number = (await this.cacheManager.get(attemptsKey)) || 0;
 
     await this.cacheManager.set(attemptsKey, attempts + 1, 1000 * 60 * 5); // Increment and store with 5 min expiry
   }
 
-  private async resetFailedAttempts(email: string): Promise<void> {
-    const attemptsKey = `otp-attempts:${email}`;
+  private async resetFailedAttempts(recipient: string): Promise<void> {
+    const attemptsKey = `otp-attempts:${recipient}`;
     await this.cacheManager.set(attemptsKey, 0, 0); // Delete the key
   }
 }
