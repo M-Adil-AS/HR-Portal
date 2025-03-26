@@ -43,10 +43,8 @@ export class OtpController {
     };
   }
 
-  /* 
-    No real use of this request handler (Just for testing purposes)
-    this.otpService.verifyOtp() will be called by other services as a verification step before some other code is executed 
-  */
+  //  No real use of this request handler (Just for testing purposes)
+  //  this.otpService.verifyOtp() will be called by other services as a verification step before some other code is executed
   @Version('1')
   @Throttle({ default: { limit: 5, ttl: 60000 } }) // Five requests per minute to allow retries
   @Post('verify')

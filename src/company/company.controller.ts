@@ -9,6 +9,7 @@ export class CompanyController {
   constructor(private companyService: CompanyService) {}
 
   //TODO: Add Captcha
+  //TODO: Refactor to add userName, Otp
   @Serialize(CompanyDto)
   @Version('1')
   @Post()

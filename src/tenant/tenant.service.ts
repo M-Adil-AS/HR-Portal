@@ -9,6 +9,7 @@ import { CryptoService } from 'src/crypto/crypto.service';
 
 @Injectable()
 export class TenantService {
+  //TODO: Store connections in Redis instead of in Memory Map
   private connections = new Map<string, DataSource>();
   private readonly logger = new Logger(TenantService.name);
 

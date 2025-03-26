@@ -25,6 +25,9 @@ export class VerifyOtpDto {
 
   @ValidateIf((o) => !o.phoneNumber && !o.email) // Validate only if email & phoneNumber don't exist
   @IsString({ message: 'Device Id is required' })
+  @Length(32, 255, {
+    message: 'Device Id must be between 32 and 255 characters',
+  })
   deviceId?: string; // Optional because there might be email or phoneNumber provided instead of deviceId
 
   @IsString({ message: 'OTP must be a string' })
