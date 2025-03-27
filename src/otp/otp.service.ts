@@ -75,7 +75,7 @@ export class OtpService {
   }
 
   private async checkCooldown(recipient: string): Promise<void> {
-    const cooldownKey = `cooldown:${recipient}`;
+    const cooldownKey = `otp-cooldown:${recipient}`;
     const hasActiveCooldown: string | null =
       await this.cacheManager.get(cooldownKey);
 
@@ -87,12 +87,12 @@ export class OtpService {
   }
 
   private async setCooldown(recipient: string): Promise<void> {
-    const cooldownKey = `cooldown:${recipient}`;
+    const cooldownKey = `otp-cooldown:${recipient}`;
     await this.cacheManager.set(cooldownKey, true, 1000 * 60); // Set Cooldown for 1 min
   }
 
   private async resetCooldown(recipient: string): Promise<void> {
-    const cooldownKey = `cooldown:${recipient}`;
+    const cooldownKey = `otp-cooldown:${recipient}`;
     await this.cacheManager.set(cooldownKey, null, 0); // Clear the generate otp cooldown
   }
 
