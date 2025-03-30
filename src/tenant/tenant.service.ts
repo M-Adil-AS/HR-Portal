@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Tenant } from './tenant.entity';
@@ -6,16 +6,22 @@ import { User } from 'src/user/user.entity';
 import { generateRandomString } from 'src/utils/crypto';
 import { ConfigService } from '@nestjs/config';
 import { CryptoService } from 'src/crypto/crypto.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { TenantCredentials } from './interfaces/tenantCredentials.interface';
 
 @Injectable()
 export class TenantService {
-  //TODO: Store connections in Redis instead of in Memory Map
+  //TODO: Research if sensitive data i.e. tenant-credentials should be stored in Redis or not?
+  //TODO: Implement Redis Security?
   private connections = new Map<string, DataSource>();
   private readonly logger = new Logger(TenantService.name);
 
   constructor(
     @InjectRepository(Tenant, 'globalConnection')
     private tenantRepository: Repository<Tenant>,
+
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
 
     private readonly configService: ConfigService,
     private readonly cryptoService: CryptoService,
@@ -90,6 +96,7 @@ export class TenantService {
   }
 
   async getTenantConnection(tenantId: string): Promise<DataSource> {
+    // ✅ Check in-memory cache first (fastest)
     if (this.connections.has(tenantId)) {
       const tenantConnection = this.connections.get(tenantId) as DataSource;
 
@@ -98,10 +105,27 @@ export class TenantService {
       else this.connections.delete(tenantId);
     }
 
-    const tenantInfo: Pick<
-      Tenant,
-      'id' | 'dbName' | 'login' | 'encryptedPassword' | 'salt' | 'iv'
-    > = await this.getTenantDBCredentials(tenantId);
+    // ✅ Check Redis (faster than DB, persists data across multiple servers compared to local memory storage)
+    let tenantInfo: TenantCredentials;
+
+    let redisCachedData: string | null = await this.cacheManager.get(
+      `tenant-credentials:${tenantId}`,
+    );
+
+    if (!redisCachedData) {
+      // ❌ If not found in Redis, fetch from DB (fallback)
+      tenantInfo = await this.getTenantDBCredentials(tenantId);
+
+      // Store in Redis for future use (with TTL / expiry)
+      await this.cacheManager.set(
+        `tenant-credentials:${tenantId}`,
+        JSON.stringify(tenantInfo),
+        1000 * 60 * 60 * 24, // 1 day expiry
+      );
+    } else {
+      // Parse Redis JSON data
+      tenantInfo = JSON.parse(redisCachedData) as TenantCredentials;
+    }
 
     const decryptedPassword = this.cryptoService.decryptPassword(
       tenantInfo.encryptedPassword,
