@@ -33,10 +33,11 @@ export class TenantService {
 
     const tenantLoginPassword = generateRandomString(); // Generate dynamic password
 
-    const { encryptedPassword, salt, iv } = this.cryptoService.encryptPassword(
-      tenantLoginPassword,
-      dbName,
-    );
+    const { encryptedPassword, salt, iv } =
+      this.cryptoService.encryptPasswordWithDerivedKey(
+        tenantLoginPassword,
+        dbName,
+      );
 
     try {
       // Needs to be executed separately.
@@ -113,7 +114,7 @@ export class TenantService {
     );
 
     if (!redisCachedData) {
-      // ❌ If not found in Redis, fetch from DB (fallback)
+      // ✅ If not found in Redis, fetch from DB (fallback)
       tenantInfo = await this.getTenantDBCredentials(tenantId);
 
       // Store in Redis for future use (with TTL / expiry)
@@ -127,11 +128,11 @@ export class TenantService {
       tenantInfo = JSON.parse(redisCachedData) as TenantCredentials;
     }
 
-    const decryptedPassword = this.cryptoService.decryptPassword(
+    const decryptedPassword = this.cryptoService.decryptPasswordWithDerivedKey(
       tenantInfo.encryptedPassword,
-      tenantInfo.dbName,
       tenantInfo.salt,
       tenantInfo.iv,
+      tenantInfo.dbName,
     );
 
     const tenantConnection = new DataSource({
