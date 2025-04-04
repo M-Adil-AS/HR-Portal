@@ -9,13 +9,13 @@ export class CompanyController {
   constructor(private companyService: CompanyService) {}
 
   //TODO: Add Captcha
-  //TODO: Refactor to add userName, Otp
+  //TODO: Add Password, Confirm for Admin
   @Serialize(CompanyDto)
   @Version('1')
   @Post()
   async registerCompany(@Body() body: RegisterCompanyDto) {
-    const company = await this.companyService.register(body);
+    const registerData = await this.companyService.register(body);
 
-    return { data: company, message: 'Successfully registered!' };
+    return { data: registerData, message: 'Successfully registered!' };
   }
 }

@@ -39,4 +39,11 @@ export class RegisterCompanyDto {
   @TrimAndLowerCase() // Type check inside TrimAndLowerCase() because Transform runs before other Validator checks
   @NormalizeEmail() // Normalize and sanitize email. Transformers are executed in order (TrimAndLowerCase first then NormalizeEmail)
   email: string;
+
+  @IsString({
+    message: 'OTP must be string',
+  })
+  @Matches(/^\d{6}$/, { message: 'OTP must be a 6-digit number' })
+  @TrimAndLowerCase() // Type check inside TrimAndLowerCase() because Transform runs before other Validator checks
+  otp: string;
 }

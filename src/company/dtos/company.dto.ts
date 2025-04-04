@@ -1,5 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 import { TenantDto } from 'src/tenant/dtos/tenant.dto';
+import { UserDto } from 'src/user/dtos/user.dto';
 
 export class CompanyDto {
   @Expose()
@@ -17,4 +18,8 @@ export class CompanyDto {
   @Expose()
   @Type(() => TenantDto)
   tenant: TenantDto;
+
+  @Expose()
+  @Type(() => UserDto)
+  user: UserDto;
 }

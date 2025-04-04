@@ -6,6 +6,7 @@ import { RegisterCompanyDto } from './dtos/register-company.dto';
 import { TenantService } from 'src/tenant/tenant.service';
 import { TenantCredentials } from 'src/tenant/interfaces/tenantCredentials.interface';
 import { UserService } from 'src/user/user.service';
+import { OtpService } from 'src/otp/otp.service';
 
 @Injectable()
 export class CompanyService {
@@ -15,9 +16,12 @@ export class CompanyService {
 
     private readonly tenantService: TenantService,
     private readonly userService: UserService,
+    private readonly otpService: OtpService,
   ) {}
 
-  async register({ companyName, email, userName }: RegisterCompanyDto) {
+  async register({ companyName, email, userName, otp }: RegisterCompanyDto) {
+    await this.otpService.verifyOtp(email, otp); // ✅ Verify OTP before any DB operations
+
     const domain = email.split('@')[1];
 
     const companyAlreadyExists = await this.companyRepository.findOne({
@@ -60,13 +64,13 @@ export class CompanyService {
       await this.tenantService.createTenantTables(tenantConnection);
 
       // Insert Admin User into User Table of Tenant DB
-      await this.userService.createAdminUserForTenant(
+      const user = await this.userService.createAdminUserForTenant(
         tenantConnection,
         email,
         userName,
       );
 
-      return company;
+      return { ...company, user };
     } catch (error) {
       if (tenantLoginCredentials) {
         await this.tenantService.deleteTenantDatabase(
