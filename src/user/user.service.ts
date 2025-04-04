@@ -7,10 +7,11 @@ export class UserService {
   async createAdminUserForTenant(
     tenantConnection: DataSource,
     email: string,
+    name: string,
   ): Promise<User> {
     const userRepository = tenantConnection.getRepository(User);
 
-    let user = userRepository.create({ email });
+    let user = userRepository.create({ email, name });
     user = await userRepository.save(user);
 
     return user;

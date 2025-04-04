@@ -17,6 +17,18 @@ export class RegisterCompanyDto {
   @TrimAndLowerCase() // Type check inside TrimAndLowerCase() because Transform runs before other Validator checks
   companyName: string;
 
+  @IsString({
+    message: 'User Name must be string',
+  })
+  @Matches(/^[a-zA-Z ]+$/, {
+    message: 'User Name must only contain letters and spaces',
+  })
+  @Length(3, 50, {
+    message: 'User Name must be between 3 and 50 characters',
+  })
+  @TrimAndLowerCase() // Type check inside TrimAndLowerCase() because Transform runs before other Validator checks
+  userName: string;
+
   @IsEmail({}, { message: 'Invalid email format' })
   @IsCompanyDomain({
     message: 'Please use the company email, not a personal email',

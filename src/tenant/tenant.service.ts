@@ -167,6 +167,7 @@ export class TenantService {
     await tenantConnection.query(`
       CREATE TABLE Users (
         id VARCHAR(100) PRIMARY KEY DEFAULT NEWID(),
+        name VARCHAR(50) NOT NULL CHECK (LEN(name) BETWEEN 3 AND 50),
         email VARCHAR(100) UNIQUE NOT NULL CHECK (LEN(email) BETWEEN 6 AND 100),
         createdAt DATETIME DEFAULT GETDATE()
       );
