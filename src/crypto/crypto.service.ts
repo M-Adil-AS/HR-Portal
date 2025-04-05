@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
+import { promisify } from 'util';
+import { scrypt as _scrypt } from 'crypto';
+
+const scrypt = promisify(_scrypt);
 
 @Injectable()
 export class CryptoService {
@@ -24,6 +28,21 @@ export class CryptoService {
       this.configService.get<string>('ENCRYPTION_KEY_LENGTH'),
     );
     this.IV_LENGTH = Number(this.configService.get<string>('IV_LENGTH'));
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hashedPassword = (await scrypt(password, salt, 32)) as Buffer;
+    return `${salt}:${hashedPassword.toString('hex')}`;
+  }
+
+  async comparePassword(
+    password: string,
+    storedHash: string,
+  ): Promise<boolean> {
+    const [salt, storedHashedPassword] = storedHash.split(':');
+    const hashedPassword = (await scrypt(password, salt, 32)) as Buffer;
+    return hashedPassword.toString('hex') === storedHashedPassword;
   }
 
   encryptPasswordWithDerivedKey(

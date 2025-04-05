@@ -19,7 +19,13 @@ export class CompanyService {
     private readonly otpService: OtpService,
   ) {}
 
-  async register({ companyName, email, userName, otp }: RegisterCompanyDto) {
+  async register({
+    companyName,
+    email,
+    userName,
+    otp,
+    password,
+  }: RegisterCompanyDto) {
     await this.otpService.verifyOtp(email, otp); // ✅ Verify OTP before any DB operations
 
     const domain = email.split('@')[1];
@@ -68,6 +74,7 @@ export class CompanyService {
         tenantConnection,
         email,
         userName,
+        password,
       );
 
       return { ...company, user };

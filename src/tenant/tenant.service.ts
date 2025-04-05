@@ -170,6 +170,7 @@ export class TenantService {
         id VARCHAR(100) PRIMARY KEY DEFAULT NEWID(),
         name VARCHAR(50) NOT NULL CHECK (LEN(name) BETWEEN 3 AND 50),
         email VARCHAR(100) UNIQUE NOT NULL CHECK (LEN(email) BETWEEN 6 AND 100),
+        password VARCHAR(200) NOT NULL,
         createdAt DATETIME DEFAULT GETDATE()
       );
     `);

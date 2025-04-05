@@ -16,6 +16,9 @@ export class User {
   @Column({ type: 'varchar', unique: true, length: 100 })
   email: string;
 
+  @Column({ type: 'varchar', length: 200 })
+  password: string;
+
   @CreateDateColumn({ type: 'datetime', default: () => 'GETDATE()' })
   createdAt: Date;
 }
