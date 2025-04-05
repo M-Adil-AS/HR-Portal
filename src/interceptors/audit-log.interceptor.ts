@@ -36,7 +36,7 @@ export class AuditLogInterceptor implements NestInterceptor {
             request_body: body ? JSON.stringify(body) : null,
           });
 
-          //TODO: Store Audit Logs in DB
+          //TODO: Store Audit Logs in DB (Do not save password, confirmPassword Fields)
         }
       }),
       catchError((error) => {

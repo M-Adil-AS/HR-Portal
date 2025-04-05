@@ -115,7 +115,7 @@ export class ApiExceptionFilter implements ExceptionFilter {
 
     this.logger.error(errorLog);
 
-    //TODO: Save Logs in File / DB
+    //TODO: Save Logs in File / DB (Do not save password, confirmPassword Fields)
 
     // Hide Sensitive Details (Database / Network) from the client
     const sensitiveErrorTypes = [QueryFailedError, AggregateError];
