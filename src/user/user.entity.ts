@@ -22,3 +22,5 @@ export class User {
   @CreateDateColumn({ type: 'datetime', default: () => 'GETDATE()' })
   createdAt: Date;
 }
+
+//TODO: Relationship with Company

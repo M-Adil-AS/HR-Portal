@@ -40,6 +40,8 @@ export class AuditLogInterceptor implements NestInterceptor {
         }
       }),
       catchError((error) => {
+        // catchError catches Errors thrown from tap() as well as from route handlers
+        // Exception Filter will handle errors directly if catchError is not used
         return throwError(() => error);
       }),
     );

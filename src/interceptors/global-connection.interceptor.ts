@@ -19,7 +19,6 @@ export class GlobalConnectionInterceptor implements NestInterceptor {
     private globalConnection: DataSource,
   ) {}
 
-  //TODO: Error Handling of Interceptor Code
   //TODO: this.logger.error() & throw Errors with details?
 
   async intercept(
