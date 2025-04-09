@@ -9,3 +9,7 @@ Row Level Security (RLS) for Admin/HR able to access only their own data from Gl
 
 Entities:
 Company, Job, Users (HR, Admin), Candidate, Interview, Job-Candidate
+
+Sale Cycle
+
+Role Permissions New approach

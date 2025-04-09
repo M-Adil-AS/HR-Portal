@@ -43,7 +43,7 @@ import { firstValueFrom } from 'rxjs';
        2. Once registered, store the clientId and clientSecret in your database or secrets manager against tenantId
 
     Auth Tokens: 
-       1. Client ID and Client Secret are retrieved using @Req: tenandId assuming that it is set on the req object in middleware/interceptor
+       1. Client ID and Client Secret are retrieved using @Req: tenantId assuming that it is set on the req object in middleware/interceptor
        2. Pass the Client ID and Client Secret through httpService request explicitly to gain auth Token
        3. After fetching auth Token, you can save it in with its expiry in Redis / DB / KeyVault / Map against TenantId
        4. Should have a method that checks that if expiry is reached, then regain the new auth Token before every request
@@ -55,7 +55,7 @@ import { firstValueFrom } from 'rxjs';
 
     Recommended place to store entries of Long Lived Auth Token against Tenant Id is in Redis and then DB (Optional Backup in case Redis resets)
 
-  Whenever we use a Third Party API, pass the auth Token explicitly in httpService per request-basis
+    Whenever we use a Third Party API, pass the auth Token explicitly in httpService per request-basis
 */
 
 @Injectable()
