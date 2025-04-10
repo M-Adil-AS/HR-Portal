@@ -26,8 +26,8 @@ import { createKeyv } from '@keyv/redis';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AppThrottlerGuard } from './guards/app-throttler.guard';
 import { ClsModule } from 'nestjs-cls';
-import { ApiErrorLoggerModule } from './api-error-logger/api-error-logger.module';
-import { ApiErrorLoggerService } from './api-error-logger/api-error-logger.service';
+import { ErrorHandlerModule } from './error-handler/error-handler.module';
+import { ApiErrorHandlerService } from './error-handler/api-error-handler.service';
 
 // Database Concepts:
 // Server-level role/permission (e.g. sysadmin) can be applied only to Logins, because Users do not exist at the server level.
@@ -106,7 +106,7 @@ import { ApiErrorLoggerService } from './api-error-logger/api-error-logger.servi
     }),
 
     CompanyModule,
-    ApiErrorLoggerModule, // Registering Global Module
+    ErrorHandlerModule, // Registering Global Module
   ],
   controllers: [AppController],
   providers: [
@@ -135,12 +135,12 @@ import { ApiErrorLoggerService } from './api-error-logger/api-error-logger.servi
     },
     {
       provide: APP_FILTER,
-      inject: [HttpAdapterHost, ApiErrorLoggerService], // Inject HttpAdapterHost. To make Exception Filter platform generic (Express/Fastify)
+      inject: [HttpAdapterHost, ApiErrorHandlerService], // Inject HttpAdapterHost. To make Exception Filter platform generic (Express/Fastify)
       useFactory: (
         httpAdapterHost: HttpAdapterHost,
-        apiErrorLogger: ApiErrorLoggerService,
+        apiErrorHandlerService: ApiErrorHandlerService,
       ) => {
-        return new ApiExceptionFilter(httpAdapterHost, apiErrorLogger);
+        return new ApiExceptionFilter(httpAdapterHost, apiErrorHandlerService);
       },
     },
     {

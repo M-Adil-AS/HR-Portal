@@ -5,9 +5,10 @@ import { MyClsStore } from 'src/interfaces/cls.interface';
 import { ErrorLog } from 'src/interfaces/error-log.interface';
 import { QueryFailedError } from 'typeorm';
 
+//TODO: Save Logs in File / DB
 @Injectable()
-export class ApiErrorLoggerService {
-  private readonly logger = new Logger(ApiErrorLoggerService.name);
+export class ApiErrorHandlerService {
+  private readonly logger = new Logger(ApiErrorHandlerService.name);
 
   constructor(private readonly cls: ClsService<MyClsStore>) {}
 
@@ -99,9 +100,17 @@ export class ApiErrorLoggerService {
       data || exception?.['errorContext']
         ? {
             ...(data || {}),
-            errorContext: exception?.['errorContext'] || undefined,
+            ...(exception?.['errorContext'] !== undefined
+              ? { errorContext: exception?.['errorContext'] }
+              : {}),
           }
         : null;
+
+    // Remove password, confirmPassword properties from request_body
+    if (request_body && typeof request_body === 'object') {
+      const { password, confirmPassword, ...sanitizedBody } = request_body;
+      request_body = sanitizedBody;
+    }
 
     const errorLog: ErrorLog = {
       status,
@@ -113,9 +122,14 @@ export class ApiErrorLoggerService {
     };
 
     this.logger.error(errorLog);
-
-    //TODO: Save Logs in File / DB (Do not save password, confirmPassword Fields)
+    this.saveLogInDB(errorLog);
 
     return { status, message, data };
   }
+
+  saveLogInDB(errorLog: ErrorLog) {
+    // could write to file if save to DB fails
+  }
+
+  writeLogToFile(errorLog: ErrorLog) {}
 }

@@ -1,14 +1,14 @@
 import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { Request, Response } from 'express';
-import { ApiErrorLoggerService } from 'src/api-error-logger/api-error-logger.service';
+import { ApiErrorHandlerService } from 'src/error-handler/api-error-handler.service';
 import { QueryFailedError } from 'typeorm';
 
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
   constructor(
     private readonly httpAdapterHost: HttpAdapterHost,
-    private readonly apiErrorLogger: ApiErrorLoggerService,
+    private readonly apiErrorHandlerService: ApiErrorHandlerService,
   ) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
@@ -19,7 +19,7 @@ export class ApiExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const { status, message, data } = this.apiErrorLogger.logError(
+    const { status, message, data } = this.apiErrorHandlerService.logError(
       exception,
       httpAdapter.getRequestUrl(request),
       request?.body ? request?.body : null,

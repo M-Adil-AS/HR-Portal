@@ -9,7 +9,7 @@ import { CryptoService } from 'src/crypto/crypto.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { TenantCredentials } from './interfaces/tenantCredentials.interface';
-import { ApiErrorLoggerService } from 'src/api-error-logger/api-error-logger.service';
+import { ApiErrorHandlerService } from 'src/error-handler/api-error-handler.service';
 
 @Injectable()
 export class TenantService {
@@ -26,7 +26,7 @@ export class TenantService {
 
     private readonly configService: ConfigService,
     private readonly cryptoService: CryptoService,
-    private readonly apiErrorLoggerService: ApiErrorLoggerService,
+    private readonly apiErrorHandlerService: ApiErrorHandlerService,
   ) {}
 
   async createTenantDatabase(dbName: string) {
@@ -79,7 +79,7 @@ export class TenantService {
         `);
       } catch (cleanupError) {
         cleanupError.errorContext = 'Create Tenant Database Cleanup Error';
-        this.apiErrorLoggerService.logError(cleanupError);
+        this.apiErrorHandlerService.logError(cleanupError);
       }
 
       throw error; // Throw the original Error
@@ -205,7 +205,7 @@ export class TenantService {
     `);
     } catch (cleanupError) {
       cleanupError.errorContext = 'Delete Tenant Database Cleanup Error';
-      this.apiErrorLoggerService.logError(cleanupError);
+      this.apiErrorHandlerService.logError(cleanupError);
     } finally {
       if (ownerConnection) await ownerConnection.destroy();
     }
