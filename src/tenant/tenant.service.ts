@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Tenant } from './tenant.entity';
@@ -9,13 +9,14 @@ import { CryptoService } from 'src/crypto/crypto.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { TenantCredentials } from './interfaces/tenantCredentials.interface';
+import { ApiErrorLoggerService } from 'src/api-error-logger/api-error-logger.service';
 
 @Injectable()
 export class TenantService {
   //TODO: Research if sensitive data i.e. tenant-credentials should be stored in Redis or not?
   //TODO: Implement Redis Security?
+  //TODO: Check why data is not persisted in Redis if App Server Restarts
   private connections = new Map<string, DataSource>();
-  private readonly logger = new Logger(TenantService.name);
 
   constructor(
     @InjectRepository(Tenant, 'globalConnection')
@@ -25,6 +26,7 @@ export class TenantService {
 
     private readonly configService: ConfigService,
     private readonly cryptoService: CryptoService,
+    private readonly apiErrorLoggerService: ApiErrorLoggerService,
   ) {}
 
   async createTenantDatabase(dbName: string) {
@@ -76,10 +78,8 @@ export class TenantService {
           END
         `);
       } catch (cleanupError) {
-        this.logger.error(
-          'Create Tenant Database Cleanup Error: ',
-          cleanupError,
-        ); // Log the cleanup Error
+        cleanupError.errorContext = 'Create Tenant Database Cleanup Error';
+        this.apiErrorLoggerService.logError(cleanupError);
       }
 
       throw error; // Throw the original Error
@@ -204,7 +204,8 @@ export class TenantService {
         DROP LOGIN [Tenant_${dbName}_Login];
     `);
     } catch (cleanupError) {
-      this.logger.error('Delete Tenant Database Cleanup Error: ', cleanupError); // Log the cleanup Error
+      cleanupError.errorContext = 'Delete Tenant Database Cleanup Error';
+      this.apiErrorLoggerService.logError(cleanupError);
     } finally {
       if (ownerConnection) await ownerConnection.destroy();
     }

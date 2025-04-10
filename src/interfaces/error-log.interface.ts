@@ -4,5 +4,5 @@ export interface ErrorLog {
   data: Record<string, any> | null; // Object with key-value pairs
   timestamp: string;
   path: string;
-  request_body?: any;
+  request_body?: string | null;
 }

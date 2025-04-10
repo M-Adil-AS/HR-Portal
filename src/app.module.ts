@@ -25,10 +25,15 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { createKeyv } from '@keyv/redis';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AppThrottlerGuard } from './guards/app-throttler.guard';
+import { ClsModule } from 'nestjs-cls';
+import { ApiErrorLoggerModule } from './api-error-logger/api-error-logger.module';
+import { ApiErrorLoggerService } from './api-error-logger/api-error-logger.service';
 
 // Database Concepts:
 // Server-level role/permission (e.g. sysadmin) can be applied only to Logins, because Users do not exist at the server level.
 // Database-level role/permission (e.g. db_owner) can only be applied to Users, and a Login must first be mapped to a User in that database to be able to access it.
+
+//TODO: Research about File Structure
 
 @Module({
   imports: [
@@ -89,8 +94,19 @@ import { AppThrottlerGuard } from './guards/app-throttler.guard';
         },
       ],
     }),
+    ClsModule.forRoot({
+      global: true,
+      middleware: {
+        mount: true, // automatically mount the ClsMiddleware for all routes
+        setup: (cls, req) => {
+          cls.set('req_url', req.originalUrl);
+          cls.set('req_body', req.body ? req.body : null);
+        },
+      },
+    }),
 
     CompanyModule,
+    ApiErrorLoggerModule, // Registering Global Module
   ],
   controllers: [AppController],
   providers: [
@@ -119,9 +135,12 @@ import { AppThrottlerGuard } from './guards/app-throttler.guard';
     },
     {
       provide: APP_FILTER,
-      inject: [HttpAdapterHost], // Inject HttpAdapterHost. To make Exception Filter platform generic (Express/Fastify)
-      useFactory: (httpAdapterHost: HttpAdapterHost) => {
-        return new ApiExceptionFilter(httpAdapterHost);
+      inject: [HttpAdapterHost, ApiErrorLoggerService], // Inject HttpAdapterHost. To make Exception Filter platform generic (Express/Fastify)
+      useFactory: (
+        httpAdapterHost: HttpAdapterHost,
+        apiErrorLogger: ApiErrorLoggerService,
+      ) => {
+        return new ApiExceptionFilter(httpAdapterHost, apiErrorLogger);
       },
     },
     {
