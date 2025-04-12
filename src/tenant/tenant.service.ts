@@ -15,7 +15,6 @@ import { ApiErrorHandlerService } from 'src/error-handler/api-error-handler.serv
 export class TenantService {
   //TODO: Research if sensitive data i.e. tenant-credentials should be stored in Redis or not?
   //TODO: Implement Redis Security?
-  //TODO: Check why data is not persisted in Redis if App Server Restarts
   private connections = new Map<string, DataSource>();
 
   constructor(
