@@ -74,15 +74,39 @@ import { ApiErrorHandlerService } from './error-handler/api-error-handler.servic
         };
       },
     }),
-    //TODO: Maybe have an interceptor which checks redis connection
+    /*
+    TODO: Fix Redis Store Options so that API does not get hanged on forever. 
+    Try to reconnect a few times and wait some time before throwing Error. 
+    Handle both cases of reconnection attempt: 
+    1. Before initial connection is made i.e. (Redis Server is not even started) 
+    2. When the socket closes unexpectedly (after the initial connection is made)
+    */
     CacheModule.registerAsync({
       isGlobal: true,
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
         return {
-          stores: [createKeyv(configService.get<string>('REDIS_URL'))],
+          stores: [
+            createKeyv({
+              url: configService.get<string>('REDIS_URL'),
+              socket: {
+                keepAlive: 30000, // Sends a TCP keep-alive packet every 30s to avoid being dropped by Redis
+                connectTimeout: 2000, // Maximum time to wait when establishing an initial connection
+                reconnectStrategy(retries, cause) {
+                  // Retry logic if Redis disconnects AFTER a successful initial connection
+                  if (retries > 3) {
+                    return cause;
+                  }
+                  return Math.min(retries * 50, 500);
+                },
+              },
+              // disableOfflineQueue: true, // Disable offline queue to fail fast when client is reconnecting
+              // pingInterval: 30000, // Send ping every 30 seconds to keep connection alive
+            }),
+          ],
           ttl: 1000 * 60 * 5, // 5 minutes default ttl for all entries of every store
+          // nonBlocking: true, // If set to true, the system will not block when using multiple stores.
         };
       },
     }),
