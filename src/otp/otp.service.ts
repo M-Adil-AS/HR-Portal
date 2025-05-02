@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 import * as crypto from 'crypto';
+import { NotificationService } from 'src/notification/notification.service';
+import { v4 as uuidv4 } from 'uuid';
 
 /*
   Throttling only rate-limits the requests per IP-basis
@@ -16,10 +18,13 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class OtpService {
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
+  constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   async issueOtp(
-    type: 'email' | 'phone' | 'push',
+    type: 'email' | 'sms' | 'push',
     recipient: string,
   ): Promise<string> {
     await this.checkCooldown(recipient); // Check recipeint-based (email/phone/push) cooldown first
@@ -28,6 +33,19 @@ export class OtpService {
 
     //TODO: Implement proper Notification System and send Notification based on type
     if (type === 'email') {
+      await this.notificationService.dispatch({
+        id: uuidv4(),
+        type,
+        link: null,
+        isRead: null,
+        isActioned: null,
+        sendTo: [recipient],
+        action: 'emailVerification',
+        entityType: 'user',
+        createdBy: recipient,
+        createdAt: new Date(),
+        data: { otp },
+      });
     }
 
     await Promise.all([

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { OtpService } from './otp.service';
 import { OtpController } from './otp.controller';
+import { NotificationModule } from 'src/notification/notification.module';
 
 /*
   Analyzing options to handle various OTP flows (email/phone/push):
@@ -32,5 +33,6 @@ import { OtpController } from './otp.controller';
   providers: [OtpService],
   controllers: [OtpController],
   exports: [OtpService],
+  imports: [NotificationModule],
 })
 export class OtpModule {}
