@@ -24,7 +24,7 @@ export class OtpService {
   ) {}
 
   async issueOtp(
-    type: 'email' | 'sms' | 'push',
+    type: 'email' | 'sms' | 'push' | 'whatsapp',
     recipient: string,
   ): Promise<string> {
     await this.checkCooldown(recipient); // Check recipeint-based (email/phone/push) cooldown first
@@ -37,8 +37,8 @@ export class OtpService {
         id: uuidv4(),
         type,
         link: null,
-        isRead: null,
-        isActioned: null,
+        isRead: false,
+        isActioned: false,
         sendTo: [recipient],
         action: 'emailVerification',
         entityType: 'user',

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as sgMail from '@sendgrid/mail';
 
@@ -12,9 +12,18 @@ export class EmailService {
 
   async sendEmail(
     to: string[],
-    templateId: string,
+    action: string,
     dynamicTemplateData: { [key: string]: any },
   ): Promise<void> {
+    const templateId = this.configService.get<string>(
+      `SENDGRID_TEMPLATE_${action.replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()}`,
+    ) as string;
+
+    if (!templateId)
+      throw new InternalServerErrorException(
+        `Email Template ID: ${templateId} does not exist!`,
+      );
+
     const msg = {
       to,
       from: this.configService.get<string>('SENDGRID_SENDER_EMAIL') as string, // your verified sender email from SendGrid

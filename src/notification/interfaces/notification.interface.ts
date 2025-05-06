@@ -1,13 +1,14 @@
 export interface Notification {
-  id: string;
-  type: 'email' | 'web' | 'sms' | 'push';
+  id?: string;
+  type: 'email' | 'web' | 'sms' | 'push' | 'whatsapp';
   link: string | null;
-  isRead: boolean | null;
-  isActioned: boolean | null;
+  isRead?: boolean;
+  isActioned?: boolean;
   sendTo: string[];
   action: string;
   entityType: string;
   createdBy: string;
-  createdAt: Date;
+  createdAt?: Date;
   data: Record<string, any>;
+  schedule?: string[] | null;
 }
