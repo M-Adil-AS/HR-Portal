@@ -171,6 +171,7 @@ export class TenantService {
         email VARCHAR(100) UNIQUE NOT NULL CHECK (LEN(email) BETWEEN 6 AND 100),
         password VARCHAR(200) NOT NULL,
         createdAt DATETIME DEFAULT GETDATE()
+        -- phoneNumber VARCHAR(20) UNIQUE NOT NULL, -- Must include if app supports sms / whatsapp notifications
       );
     `);
   }
