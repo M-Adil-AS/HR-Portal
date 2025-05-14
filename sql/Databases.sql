@@ -30,43 +30,38 @@ CREATE TABLE Tenants (
 
 CREATE TABLE AppUsers (
 	id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+	globalUserId UNIQUEIDENTIFIER UNIQUE NOT NULL,
 	name VARCHAR(50) NOT NULL CHECK (LEN(name) BETWEEN 3 AND 50),
-    email VARCHAR(100) UNIQUE NOT NULL CHECK (LEN(email) BETWEEN 6 AND 100),
     password VARCHAR(200) NOT NULL,
     createdAt DATETIME DEFAULT GETDATE()
-	-- phoneNumber VARCHAR(20) UNIQUE NOT NULL, -- Must include if app supports sms / whatsapp notifications
+	FOREIGN KEY (globalUserId) REFERENCES GlobalUsers(id) ON DELETE CASCADE
 );
 
-CREATE TABLE TenantUsers (
-	id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-	email VARCHAR(100) UNIQUE NOT NULL,
-	tenantId UNIQUEIDENTIFIER NOT NULL,
-	FOREIGN KEY (tenantId) REFERENCES Tenants(id) ON DELETE CASCADE
+CREATE TABLE GlobalUsers (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    email VARCHAR(100) UNIQUE NOT NULL CHECK (LEN(email) BETWEEN 6 AND 100),
 	-- phoneNumber VARCHAR(20) UNIQUE NOT NULL, -- Must include if app supports sms / whatsapp notifications
+    tenantId UNIQUEIDENTIFIER NULL,
+	userType VARCHAR(20) NOT NULL CHECK (userType IN ('app_user', 'tenant_user'))
+    FOREIGN KEY (tenantId) REFERENCES Tenants(id) ON DELETE CASCADE
+	CHECK (
+    (userType = 'tenant_user' AND tenantId IS NOT NULL) OR
+    (userType = 'app_user' AND tenantId IS NULL)
+)
 );
 
-/*
-	createdBy instead of two separate nullable FK fields (to two tables: AppUsers, TenantUsers) in order to avoid query complexity and extra JOIN
-	for simple applications having only one User Table (id, name, email), we can simply include a FK reference here using userId instead of createdBy
-*/
 CREATE TABLE Notifications (
 	id INT IDENTITY(1,1) PRIMARY KEY,
 	type VARCHAR(20) NOT NULL CHECK (type IN ('email', 'web', 'sms', 'push', 'whatsapp')),
 	link VARCHAR(255) NULL,
 	action VARCHAR(50) NOT NULL,
 	entityType VARCHAR(50) NOT NULL,
-	createdBy VARCHAR(100) NOT NULL,
-	createdByType VARCHAR(20) NOT NULL CHECK (createdByType IN ('app_user', 'tenant_user')),
-	createdByTenantId UNIQUEIDENTIFIER NULL,
+	senderId UNIQUEIDENTIFIER NOT NULL,
 	createdAt DATETIME DEFAULT GETDATE(),
 	data NVARCHAR(MAX) NOT NULL,
 	isTenantActioned BIT DEFAULT 0, -- Indicating if tenant action has been performed on a multi-schedule notification in order to stop sending the next schedule notifications to any of the tenant users
 	tenantActionedAt DATETIME DEFAULT NULL,
-	FOREIGN KEY (createdByTenantId) REFERENCES Tenants(id) ON DELETE SET CASCADE
-	CHECK (
-		(createdByType = 'tenant_user' AND createdByTenantId IS NOT NULL) OR
-		(createdByType = 'app_user' AND createdByTenantId IS NULL)
-	)
+	FOREIGN KEY (senderId) REFERENCES GlobalUsers(id) ON DELETE CASCADE
 );
 
 CREATE TABLE NotificationSchedule (
@@ -76,25 +71,14 @@ CREATE TABLE NotificationSchedule (
 	FOREIGN KEY (notificationId) REFERENCES notifications(id) ON DELETE CASCADE,
 );
 
-/* 
-	email, phoneNumber instead of two separate nullable FK fields (to two tables: AppUsers, TenantUsers) in order to avoid query complexity and extra JOIN
-	for simple applications having only one User Table (id, name, email, phoneNumber), we can simply include a FK reference here using userId instead of email, phoneNumber
-*/
 CREATE TABLE NotificationUser (
 	id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
 	notificationId INT NOT NULL,
-	email VARCHAR(100) NULL CHECK (LEN(email) BETWEEN 6 AND 100),
-	recipientType VARCHAR(20) NOT NULL CHECK (recipientType IN ('app_user', 'tenant_user')),
-	recipientTenantId UNIQUEIDENTIFIER NULL,
+	recipientId UNIQUEIDENTIFIER NOT NULL,
 	isUserActioned BIT DEFAULT 0, -- Indicating if user action has been performed on a multi-schedule notification in order to stop sending the next schedule notifications to the particular user
 	userActionedAt DATETIME DEFAULT NULL,
 	FOREIGN KEY (notificationId) REFERENCES notifications(id) ON DELETE CASCADE,
-	FOREIGN KEY (recipientTenantId) REFERENCES Tenants(id) ON DELETE SET CASCADE,
-	CHECK (
-	  (recipientType = 'tenant_user' AND recipientTenantId IS NOT NULL) OR
-	  (recipientType = 'app_user' AND recipientTenantId IS NULL)
-	)
-	-- phoneNumber VARCHAR(20) NULL, -- Must include if app supports sms / whatsapp notifications
+	FOREIGN KEY (recipientId) REFERENCES GlobalUsers(id) ON DELETE CASCADE
 );
 
 CREATE TABLE NotificationStatus (
