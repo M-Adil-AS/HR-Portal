@@ -28,6 +28,20 @@ CREATE TABLE Tenants (
 	FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE
 );
 
+CREATE TABLE GlobalUsers (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    email VARCHAR(100) UNIQUE NOT NULL CHECK (LEN(email) BETWEEN 6 AND 100),
+	-- phoneNumber VARCHAR(20) UNIQUE NOT NULL, -- Must include if app supports sms / whatsapp notifications
+    tenantId UNIQUEIDENTIFIER NULL,
+	userType VARCHAR(20) NOT NULL
+    FOREIGN KEY (tenantId) REFERENCES Tenants(id) ON DELETE CASCADE
+	CONSTRAINT CHK_GlobalUsers_UserType_Valid CHECK (userType IN ('app_user', 'tenant_user')),
+    CONSTRAINT CHK_GlobalUsers_UserType_TenantId CHECK (
+        (userType = 'tenant_user' AND tenantId IS NOT NULL) OR
+        (userType = 'app_user' AND tenantId IS NULL)
+    )
+);
+
 CREATE TABLE AppUsers (
 	id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
 	globalUserId UNIQUEIDENTIFIER UNIQUE NOT NULL,
@@ -35,19 +49,6 @@ CREATE TABLE AppUsers (
     password VARCHAR(200) NOT NULL,
     createdAt DATETIME DEFAULT GETDATE()
 	FOREIGN KEY (globalUserId) REFERENCES GlobalUsers(id) ON DELETE CASCADE
-);
-
-CREATE TABLE GlobalUsers (
-    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    email VARCHAR(100) UNIQUE NOT NULL CHECK (LEN(email) BETWEEN 6 AND 100),
-	-- phoneNumber VARCHAR(20) UNIQUE NOT NULL, -- Must include if app supports sms / whatsapp notifications
-    tenantId UNIQUEIDENTIFIER NULL,
-	userType VARCHAR(20) NOT NULL CHECK (userType IN ('app_user', 'tenant_user'))
-    FOREIGN KEY (tenantId) REFERENCES Tenants(id) ON DELETE CASCADE
-	CHECK (
-    (userType = 'tenant_user' AND tenantId IS NOT NULL) OR
-    (userType = 'app_user' AND tenantId IS NULL)
-)
 );
 
 CREATE TABLE Notifications (
@@ -67,8 +68,8 @@ CREATE TABLE Notifications (
 CREATE TABLE NotificationSchedule (
 	id INT IDENTITY(1,1) PRIMARY KEY,
 	notificationId INT NOT NULL,
-	actionDateTime DATETIME NOT NULL,
-	FOREIGN KEY (notificationId) REFERENCES notifications(id) ON DELETE CASCADE,
+	actionDateTime DATETIME NOT NULL
+	FOREIGN KEY (notificationId) REFERENCES notifications(id) ON DELETE CASCADE
 );
 
 CREATE TABLE NotificationUser (
@@ -78,7 +79,7 @@ CREATE TABLE NotificationUser (
 	isUserActioned BIT DEFAULT 0, -- Indicating if user action has been performed on a multi-schedule notification in order to stop sending the next schedule notifications to the particular user
 	userActionedAt DATETIME DEFAULT NULL,
 	FOREIGN KEY (notificationId) REFERENCES notifications(id) ON DELETE CASCADE,
-	FOREIGN KEY (recipientId) REFERENCES GlobalUsers(id) ON DELETE CASCADE
+	FOREIGN KEY (recipientId) REFERENCES GlobalUsers(id) ON DELETE NO ACTION
 );
 
 CREATE TABLE NotificationStatus (

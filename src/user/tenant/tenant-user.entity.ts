@@ -5,12 +5,12 @@ import {
   CreateDateColumn,
 } from 'typeorm';
 
-// No Foreign Relationship between Users and Company/Tenant because of cross-database
+// No Foreign Relationship between TenantUsers and Company/Tenant because of cross-database
 // No companyId or tenantId key required in Tenant DB Tables
 // Request (JWT: tenantId) -> Connect to Tenant DB -> Get All Users of that particular company/tenant
 
 @Entity({ name: 'Users' })
-export class User {
+export class TenantUsers {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

@@ -33,19 +33,19 @@ export class OtpService {
 
     //TODO: Implement proper Notification System and send Notification based on type
     if (type === 'email') {
-      await this.notificationService.dispatch({
-        id: uuidv4(),
-        type,
-        link: null,
-        isRead: false,
-        isActioned: false,
-        sendTo: [recipient],
-        action: 'emailVerification',
-        entityType: 'user',
-        createdBy: recipient,
-        createdAt: new Date(),
-        data: { otp },
-      });
+      // await this.notificationService.dispatch({
+      //   id: uuidv4(),
+      //   type,
+      //   link: null,
+      //   isRead: false,
+      //   isActioned: false,
+      //   sendTo: [recipient],
+      //   action: 'emailVerification',
+      //   entityType: 'user',
+      //   createdBy: recipient,
+      //   createdAt: new Date(),
+      //   data: { otp },
+      // });
     }
 
     await Promise.all([

@@ -2,7 +2,7 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Tenant } from './tenant.entity';
-import { User } from 'src/user/user.entity';
+import { TenantUsers } from 'src/user/tenant/tenant-user.entity';
 import { generateRandomString } from 'src/utils/crypto';
 import { ConfigService } from '@nestjs/config';
 import { CryptoService } from 'src/crypto/crypto.service';
@@ -147,7 +147,7 @@ export class TenantService {
         encrypt: true, // To Encrypt traffic between application and database, Set Force Encryption to True in SQL Server Configuration Manager Protocols for SQL Express
         trustServerCertificate: true, // Bypass SSL verification (for local)
       },
-      entities: [User], // Register your entities
+      entities: [TenantUsers], // Register your entities
       extra: {
         max: 10, // Max connections the pool can create. If all are in use, new queries must wait until a connection is free
         min: 2, // Pool always keeps at least Min connections open, even when idle

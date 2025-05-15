@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { User } from './user.entity';
+import { TenantUsers } from './tenant-user.entity';
 import { CryptoService } from 'src/crypto/crypto.service';
 
 @Injectable()
-export class UserService {
+export class TenantUserService {
   constructor(private readonly cryptoService: CryptoService) {}
 
   async createAdminUserForTenant(
@@ -12,8 +12,8 @@ export class UserService {
     email: string,
     name: string,
     password: string,
-  ): Promise<User> {
-    const userRepository = tenantConnection.getRepository(User);
+  ): Promise<TenantUsers> {
+    const userRepository = tenantConnection.getRepository(TenantUsers);
     const hashedPassword = await this.cryptoService.hashPassword(password);
 
     let user = userRepository.create({ email, name, password: hashedPassword });

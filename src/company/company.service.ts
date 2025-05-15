@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { RegisterCompanyDto } from './dtos/register-company.dto';
 import { TenantService } from 'src/tenant/tenant.service';
 import { TenantCredentials } from 'src/tenant/interfaces/tenantCredentials.interface';
-import { UserService } from 'src/user/user.service';
+import { TenantUserService } from 'src/user/tenant/tenant-user.service';
 import { OtpService } from 'src/otp/otp.service';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class CompanyService {
     private companyRepository: Repository<Company>,
 
     private readonly tenantService: TenantService,
-    private readonly userService: UserService,
+    private readonly userService: TenantUserService,
     private readonly otpService: OtpService,
   ) {}
 
@@ -57,7 +57,10 @@ export class CompanyService {
       company = this.companyRepository.create({
         name: companyName,
         domain,
-        tenant: tenantLoginCredentials, // Automatically create a related Tenant Entity instance because of cascade:true
+        tenant: {
+          ...tenantLoginCredentials,
+          users: [{ email, userType: 'tenant_user' }],
+        }, // Automatically create a Company related Tenant Entity instance & Tenant related Global Users because of cascade:true
       });
 
       company = await this.companyRepository.save(company);

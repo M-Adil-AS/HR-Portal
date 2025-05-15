@@ -1,10 +1,12 @@
 import { Company } from 'src/company/company.entity';
+import { GlobalUsers } from 'src/user/global/global-user.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   OneToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 
 @Entity({ name: 'Tenants' })
@@ -32,4 +34,7 @@ export class Tenant {
   @OneToOne(() => Company, (company) => company.tenant, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'companyId' }) // Specifies that companyId is the foreign key
   company: Company;
+
+  @OneToMany(() => GlobalUsers, (user) => user.tenant, { cascade: true })
+  users: GlobalUsers[];
 }
