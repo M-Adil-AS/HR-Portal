@@ -170,7 +170,8 @@ export class TenantService {
         name VARCHAR(50) NOT NULL CHECK (LEN(name) BETWEEN 3 AND 50),
         email VARCHAR(100) UNIQUE NOT NULL CHECK (LEN(email) BETWEEN 6 AND 100),
         password VARCHAR(200) NOT NULL,
-        createdAt DATETIME DEFAULT GETDATE()
+        createdAt DATETIME DEFAULT GETDATE(),
+        isDeleted BIT DEFAULT 0,
         -- phoneNumber VARCHAR(20) UNIQUE NOT NULL, -- Must include if app supports sms / whatsapp notifications
       );
     `);

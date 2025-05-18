@@ -29,9 +29,12 @@ export class Tenant {
   @Column({ type: 'char', length: 32 })
   iv: string;
 
+  @Column({ type: 'bit', default: false })
+  isDeleted: boolean;
+
   // Join Column must be used in one of entities having one-one relationship with another entity. Should be used in the entity which owns the foreign key
-  // onDelete Cascade so that if Company is Deleted then Tenant is also Deleted maintaining Referential Intergrity.
-  @OneToOne(() => Company, (company) => company.tenant, { onDelete: 'CASCADE' })
+  // If you wish to delete Tenant automatically when company is deleted: @OneToOne(() => Company, (company) => company.tenant, { onDelete: 'CASCADE' })
+  @OneToOne(() => Company, (company) => company.tenant)
   @JoinColumn({ name: 'companyId' }) // Specifies that companyId is the foreign key
   company: Company;
 

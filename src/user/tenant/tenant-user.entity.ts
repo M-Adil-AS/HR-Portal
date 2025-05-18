@@ -25,4 +25,7 @@ export class TenantUsers {
 
   @CreateDateColumn({ type: 'datetime', default: () => 'GETDATE()' })
   createdAt: Date;
+
+  @Column({ type: 'bit', default: false })
+  isDeleted: boolean;
 }

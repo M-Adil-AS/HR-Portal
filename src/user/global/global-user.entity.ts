@@ -14,9 +14,7 @@ export class GlobalUsers {
   @Column({ type: 'varchar', length: 20 })
   userType: 'app_user' | 'tenant_user';
 
-  @ManyToOne(() => Tenant, { nullable: true, onDelete: 'CASCADE' })
+  // If we wish to delete GlobalUsers automatically when Tenant is deleted: @ManyToOne(() => Tenant, { nullable: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => Tenant, { nullable: true })
   tenant: Tenant;
 }
-
-//TODO: onDelete CASCADE to onDelete NO ACTION?
-//TODO: INT IDENTITY(1,1) WARNING

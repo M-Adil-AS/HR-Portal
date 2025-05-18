@@ -24,7 +24,7 @@ export class Company {
   // cascade true so that any changes applied to Company Instance will also affect the related Tenant Instance.
   // Example: company.tenant.dbName=xyz, companyRepository.save(company)
   // cascade true applied to Company instead of Tenant because Tenant will only exist if a Company exists in the first place because companyId is foreign key in Tenant.
-  // OnDelete Cascade on Tenant must remain even though we are using cascade true here. Because OnDelete is a DB-Level Feature & TypeORM must remian synced with DB Schema. While cascade true is TypeORM-Level Feature.
+  // If we wish to delete associated records, OnDelete Cascade must remain on other table even though we are using cascade true. Because OnDelete is a DB-Level Feature & TypeORM must remian synced with DB Schema. While cascade true is TypeORM-Level Feature.
   @OneToOne(() => Tenant, (tenant) => tenant.company, { cascade: true })
   tenant: Tenant;
 }
