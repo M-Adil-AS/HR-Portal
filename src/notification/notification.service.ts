@@ -4,6 +4,8 @@ import { Notification } from './interfaces/notification.interface';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
+//TODO: Change DATETIME to UTC: DATETIMEOFFSET
+
 @Injectable()
 export class NotificationService {
   constructor(
@@ -14,7 +16,7 @@ export class NotificationService {
   ) {}
 
   async dispatch(notification: Notification): Promise<void> {
-    const notificationId: string = await this.saveNotification(notification);
+    const notificationId: number = await this.saveNotification(notification);
 
     await this.processNotifications(notificationId);
 
@@ -28,7 +30,7 @@ export class NotificationService {
     }
   }
 
-  async processNotifications(notificationId: string | null) {
+  async processNotifications(notificationId: number | null) {
     let result;
 
     if (notificationId === null) {
@@ -113,7 +115,7 @@ export class NotificationService {
     createdBy,
     data,
     schedule = null,
-  }: Notification): Promise<string> {
+  }: Notification): Promise<number> {
     const result = await this.globalConnection.query(
       `EXEC [dbo].[SaveNotification] 
         @type = @0, 
@@ -136,7 +138,7 @@ export class NotificationService {
       ],
     );
 
-    const { notificationId } = result[0];
+    const { notificationId }: { notificationId: number } = result[0];
     return notificationId;
   }
 }

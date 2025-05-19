@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 import * as crypto from 'crypto';
+import { EmailService } from 'src/notification/email/email.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -21,31 +22,21 @@ export class OtpService {
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly notificationService: NotificationService,
+    private readonly emailService: EmailService,
   ) {}
 
   async issueOtp(
     type: 'email' | 'sms' | 'push' | 'whatsapp',
     recipient: string,
+    action: string,
   ): Promise<string> {
     await this.checkCooldown(recipient); // Check recipeint-based (email/phone/push) cooldown first
 
     const otp: string = crypto.randomInt(100000, 999999).toString(); // 6-digit OTP
 
     //TODO: Implement proper Notification System and send Notification based on type
-    if (type === 'email') {
-      // await this.notificationService.dispatch({
-      //   id: uuidv4(),
-      //   type,
-      //   link: null,
-      //   isRead: false,
-      //   isActioned: false,
-      //   sendTo: [recipient],
-      //   action: 'emailVerification',
-      //   entityType: 'user',
-      //   createdBy: recipient,
-      //   createdAt: new Date(),
-      //   data: { otp },
-      // });
+    if (type === 'email' && action === 'emailVerification') {
+      // Send Email directly because Global User doesn't exist before OTP verification
     }
 
     await Promise.all([

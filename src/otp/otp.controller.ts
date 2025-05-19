@@ -18,7 +18,11 @@ export class OtpController {
   @Throttle({ default: { limit: 1, ttl: 60000 } }) // One request per minute
   @Post('companyEmail')
   async companyEmailOtp(@Body() body: CompanyEmailOtpDto) {
-    const otp = await this.otpService.issueOtp('email', body?.email);
+    const otp = await this.otpService.issueOtp(
+      'email',
+      body?.email,
+      'emailVerification',
+    );
 
     return {
       data: this.configService.get<string>('NODE_ENV')?.includes('local')
@@ -33,7 +37,11 @@ export class OtpController {
   @Throttle({ default: { limit: 1, ttl: 60000 } }) // One request per minute
   @Post('email')
   async emailOtp(@Body() body: EmailOtpDto) {
-    const otp = await this.otpService.issueOtp('email', body?.email);
+    const otp = await this.otpService.issueOtp(
+      'email',
+      body?.email,
+      'emailVerification',
+    );
 
     return {
       data: this.configService.get<string>('NODE_ENV')?.includes('local')

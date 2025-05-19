@@ -1,6 +1,6 @@
 export interface Notification {
   id?: string;
-  type: 'email' | 'web' | 'sms' | 'push' | 'whatsapp';
+  type: 'email' | 'web' | 'sms' | 'push' | 'whatsapp' | 'webhook';
   link: string | null;
   isRead?: boolean;
   isActioned?: boolean;
