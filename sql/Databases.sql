@@ -55,7 +55,7 @@ CREATE TABLE AppUsers (
 
 CREATE TABLE Notifications (
 	id INT IDENTITY(1,1) PRIMARY KEY,
-	type VARCHAR(20) NOT NULL CHECK (type IN ('email', 'web', 'sms', 'push', 'whatsapp')),
+	type VARCHAR(20) NOT NULL CHECK (type IN ('email', 'web', 'sms', 'push', 'whatsapp', 'webhook')),
 	link VARCHAR(255) NULL,
 	action VARCHAR(50) NOT NULL,
 	entityType VARCHAR(50) NOT NULL,
