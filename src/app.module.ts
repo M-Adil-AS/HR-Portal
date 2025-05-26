@@ -30,6 +30,10 @@ import { ErrorHandlerModule } from './error-handler/error-handler.module';
 import { ApiErrorHandlerService } from './error-handler/api-error-handler.service';
 import { GlobalUsers } from './user/global/global-user.entity';
 import { AppUsers } from './user/app/app-user.entity';
+import { Notification } from './notification/entities/notification.entity';
+import { NotificationSchedule } from './notification/entities/notification-schedule.entity';
+import { NotificationRecipient } from './notification/entities/notification-recipient.entity';
+import { NotificationStatus } from './notification/entities/notification-status.entity';
 
 // Database Concepts:
 // Server-level role/permission (e.g. sysadmin) can be applied only to Logins, because Users do not exist at the server level.
@@ -66,7 +70,16 @@ import { AppUsers } from './user/app/app-user.entity';
             encrypt: true, // To Encrypt traffic between application and database, Set Force Encryption to True in SQL Server Configuration Manager Protocols for SQL Express
             trustServerCertificate: true, // Bypass SSL verification (for local)
           },
-          entities: [Company, Tenant, GlobalUsers, AppUsers], // Register your entities
+          entities: [
+            Company,
+            Tenant,
+            GlobalUsers,
+            AppUsers,
+            Notification,
+            NotificationSchedule,
+            NotificationRecipient,
+            NotificationStatus,
+          ], // Register your entities
           autoLoadEntities: false, // Because there will be multiple DB connections in our App and not every Entity belongs to Global Database.
           extra: {
             max: 20, // Max no. of connections made internally in TypeORM. As requests come in, it creates more connections up to the max value. Each request uses a separate connection. If capacity is reached, additional requests wait in a queue until a connection becomes available.

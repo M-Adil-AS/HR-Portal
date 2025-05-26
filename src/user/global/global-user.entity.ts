@@ -5,9 +5,12 @@ import {
   Column,
   ManyToOne,
   OneToOne,
+  OneToMany,
 } from 'typeorm';
 import { AppUsers } from '../app/app-user.entity';
 import { UserType } from '../enums/user-type.enum';
+import { Notification } from 'src/notification/entities/notification.entity';
+import { NotificationRecipient } from 'src/notification/entities/notification-recipient.entity';
 
 @Entity({ name: 'GlobalUsers' })
 export class GlobalUsers {
@@ -24,8 +27,20 @@ export class GlobalUsers {
 
   // If we wish to delete GlobalUsers automatically when Tenant is deleted: @ManyToOne(() => Tenant, { nullable: true, onDelete: 'CASCADE' })
   @ManyToOne(() => Tenant, { nullable: true })
-  tenant: Tenant;
+  tenant: Tenant | null;
 
   @OneToOne(() => AppUsers, (appUser) => appUser.globalUser, { cascade: true })
   appUser?: AppUsers;
+
+  @OneToMany(() => Notification, (notification) => notification.sender, {
+    cascade: true,
+  })
+  notificationsSent: Notification[];
+
+  @OneToMany(
+    () => NotificationRecipient,
+    (notificationRecipient) => notificationRecipient.recipient,
+    { cascade: true },
+  )
+  notificationRecipients: NotificationRecipient[];
 }

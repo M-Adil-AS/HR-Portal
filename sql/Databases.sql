@@ -74,7 +74,7 @@ CREATE TABLE NotificationSchedule (
 	FOREIGN KEY (notificationId) REFERENCES notifications(id) ON DELETE NO ACTION
 );
 
-CREATE TABLE NotificationUser (
+CREATE TABLE NotificationRecipient (
 	id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
 	notificationId INT NOT NULL,
 	recipientId UNIQUEIDENTIFIER NOT NULL,
@@ -86,7 +86,7 @@ CREATE TABLE NotificationUser (
 
 CREATE TABLE NotificationStatus (
 	id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-	notificationUserId UNIQUEIDENTIFIER NOT NULL,
+	notificationRecipientId UNIQUEIDENTIFIER NOT NULL,
 	scheduleId INT NOT NULL,
 	isRead BIT DEFAULT 0,
 	isProcessed BIT DEFAULT 0,
@@ -94,6 +94,6 @@ CREATE TABLE NotificationStatus (
 	processedAt DATETIME DEFAULT NULL,
 	erroredAt DATETIME DEFAULT NULL,
 	errorMsg NVARCHAR(MAX) DEFAULT NULL,
-	FOREIGN KEY (notificationUserId) REFERENCES NotificationUser(id) ON DELETE NO ACTION,
+	FOREIGN KEY (notificationRecipientId) REFERENCES NotificationRecipient(id) ON DELETE NO ACTION,
 	FOREIGN KEY (scheduleId) REFERENCES NotificationSchedule(id) ON DELETE NO ACTION
 );

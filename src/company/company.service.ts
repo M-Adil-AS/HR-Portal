@@ -7,6 +7,7 @@ import { TenantService } from 'src/tenant/tenant.service';
 import { TenantCredentials } from 'src/tenant/interfaces/tenantCredentials.interface';
 import { TenantUserService } from 'src/user/tenant/tenant-user.service';
 import { OtpService } from 'src/otp/otp.service';
+import { UserType } from 'src/user/enums/user-type.enum';
 
 @Injectable()
 export class CompanyService {
@@ -59,7 +60,7 @@ export class CompanyService {
         domain,
         tenant: {
           ...tenantLoginCredentials,
-          users: [{ email, userType: 'tenant_user' }],
+          users: [{ email, userType: UserType.TENANT_USER }],
         }, // Automatically create a Company related Tenant Entity instance & Tenant related Global Users because of cascade:true
       });
 

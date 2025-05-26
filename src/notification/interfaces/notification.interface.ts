@@ -1,6 +1,8 @@
+import { NotificationType } from '../types/notification.type';
+
 export interface Notification {
   id?: string;
-  type: 'email' | 'web' | 'sms' | 'push' | 'whatsapp' | 'webhook';
+  type: NotificationType;
   link: string | null;
   isRead?: boolean;
   isActioned?: boolean;
