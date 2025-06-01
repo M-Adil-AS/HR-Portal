@@ -8,8 +8,6 @@ import {
 import { Cache } from 'cache-manager';
 import * as crypto from 'crypto';
 import { EmailService } from 'src/notification/email/email.service';
-import { NotificationService } from 'src/notification/notification.service';
-import { v4 as uuidv4 } from 'uuid';
 
 /*
   Throttling only rate-limits the requests per IP-basis
@@ -21,7 +19,6 @@ import { v4 as uuidv4 } from 'uuid';
 export class OtpService {
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private readonly notificationService: NotificationService,
     private readonly emailService: EmailService,
   ) {}
 
@@ -37,6 +34,7 @@ export class OtpService {
     //TODO: Implement proper Notification System and send Notification based on type
     if (type === 'email' && action === 'emailVerification') {
       // Send Email directly because Global User doesn't exist before OTP verification
+      await this.emailService.sendEmail([recipient], action, { otp });
     }
 
     await Promise.all([

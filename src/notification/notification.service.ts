@@ -1,10 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { EmailService } from './email/email.service';
 import { Notification } from './interfaces/notification.interface';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { ApiErrorHandlerService } from 'src/error-handler/api-error-handler.service';
+import { NotificationStatus } from './entities/notification-status.entity';
+import { PendingNotification } from './interfaces/pending-notification.interface';
+import { handleEmail } from './handlers/email/index.handler';
 
 //TODO: Change DATETIME to UTC: DATETIMEOFFSET
+//TODO: WebSocket web Notifications
 
 @Injectable()
 export class NotificationService {
@@ -12,22 +17,19 @@ export class NotificationService {
     @InjectDataSource('globalConnection')
     private globalConnection: DataSource,
 
+    @InjectRepository(NotificationStatus, 'globalConnection')
+    private notificationStatusRepository: Repository<NotificationStatus>,
+
     private readonly emailService: EmailService,
+    private readonly apiErrorHandlerService: ApiErrorHandlerService,
   ) {}
+
+  static readonly groupedTypes: string[] = ['email'];
 
   async dispatch(notification: Notification): Promise<void> {
     const notificationId: number = await this.saveNotification(notification);
 
     await this.processNotifications(notificationId);
-
-    // Deliver Notification
-    if (notification['type'] === 'email') {
-      await this.emailService.sendEmail(
-        notification['sendTo'],
-        notification['action'],
-        notification['data'],
-      );
-    }
   }
 
   async processNotifications(notificationId: number | null) {
@@ -45,66 +47,59 @@ export class NotificationService {
       );
     }
 
-    const notifications = result;
+    const notifications: PendingNotification[] = result.map(
+      (notification: any) => {
+        return {
+          ...notification,
+          data: JSON.parse(notification.data),
+          recipients: JSON.parse(notification.recipients),
+        };
+      },
+    );
 
-    // const typeHandlers = {
-    //   email: handleEmail,
-    //   webhook: handleWebhook,
-    // };
+    const typeHandlers = {
+      email: handleEmail,
+      // webhook: handleWebhook,
+    };
 
-    // for (const notification of notifications) {
-    //   try {
-    //     context.log('Processing Notification: ' + JSON.stringify(notification));
-    //     const type = notification.Type.trim(); // Trim whitespace from Type
-    //     const typeHandler = typeHandlers[type];
-    //     if (typeHandler && !notification['Actioned']) {
-    //       await typeHandler(notification, emailData, context);
-    //     } else {
-    //       context.error(`No handler found for Type: ${type}`);
-    //       throw new Error(`No handler found for Type: ${type}`);
-    //     }
-    //   } catch (err) {
-    //     const errorMsg = err?.message || err?.response?.data?.message;
-    //     const updateRequest = getPool().request();
+    for (const notification of notifications) {
+      try {
+        const type = notification.type.trim(); // Trim whitespace from Type
+        const typeHandler = typeHandlers[type];
 
-    //     let updateQuery = `UPDATE NotificationSchedule SET IsErrored=${1}, ProcessedAt=GETDATE(), ErrorMsg=@errorMsg WHERE NotificationId=@notificationId`;
+        if (typeHandler) {
+          await typeHandler(notification, {
+            emailService: this.emailService,
+            notificationStatusRepository: this.notificationStatusRepository,
+          });
+        } else {
+          throw new InternalServerErrorException(
+            `No handler found for Notification Type: ${type}`,
+          );
+        }
+      } catch (err) {
+        const { message } = this.apiErrorHandlerService.logError(err);
 
-    //     updateRequest.input(`errorMsg`, sql.NVarChar, errorMsg || null);
-    //     updateRequest.input(`notificationId`, sql.NVarChar, notification.ID);
+        const whereCondition = NotificationService.groupedTypes.includes(
+          notification.type,
+        )
+          ? { notificationSchedule: { id: notification.scheduleId } }
+          : {
+              id: notification?.recipients?.[0]?.notificationStatus
+                ?.notificationStatusId,
+            };
 
-    //     await updateRequest.query(updateQuery);
+        await this.notificationStatusRepository.update(whereCondition, {
+          isErrored: true,
+          erroredAt: new Date(),
+          errorMsg: message || null,
+        });
 
-    //     logNotificationError(err, context);
-    // }
+        // If Notification is to be processed immediately (API request: notificationId !== NULL), throw error
+        if (notificationId !== null) throw err;
+      }
+    }
   }
-  // }
-
-  // Type-specific handlers
-  // const handleEmail = async (notification, emailData = {}, context) => {
-  //   const entityTypeHandlers = {
-  //     CustomerSubscription: handleCustomerSubscriptionEmails,
-  //     Customer: handleCustomerEmails,
-  //     WorkQueue: handleWorkQueueEmails,
-  //     Order: handleOrderEmails,
-  //   };
-
-  //   const entityTypeHandler = entityTypeHandlers[notification.EntityType];
-  //   if (entityTypeHandler) {
-  //     await entityTypeHandler(
-  //       notification.Action,
-  //       notification,
-  //       emailData,
-  //       context
-  //     );
-  //   } else {
-  //     context.error(
-  //       `No handler found for EntityType: ${notification.EntityType}`
-  //     );
-  //     throw new Error(
-  //       `No handler found for EntityType: ${notification.EntityType}`
-  //     );
-  //   }
-  // };
 
   async saveNotification({
     type,

@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { NotificationRecipient } from './notification-recipient.entity';
 import { NotificationSchedule } from './notification-schedule.entity';
 
@@ -35,5 +41,11 @@ export class NotificationStatus {
     () => NotificationSchedule,
     (notificationSchedule) => notificationSchedule.notificationStatuses,
   )
+  /*
+    TypeORM automatically creates/expects a foreign key column using this pattern: {relationPropertyName} + "Id"
+    In our case, the foreign key column is scheduleId (custom), rather than notificationScheduleId (default)
+    Hence explicitly specify the custom foreign key column for relationship   
+  */
+  @JoinColumn({ name: 'scheduleId' })
   notificationSchedule: NotificationSchedule;
 }
