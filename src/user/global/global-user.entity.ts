@@ -26,7 +26,7 @@ export class GlobalUsers {
   userType: UserType;
 
   // If we wish to delete GlobalUsers automatically when Tenant is deleted: @ManyToOne(() => Tenant, { nullable: true, onDelete: 'CASCADE' })
-  @ManyToOne(() => Tenant, { nullable: true })
+  @ManyToOne(() => Tenant, (tenant) => tenant.users, { nullable: true })
   tenant: Tenant | null;
 
   @OneToOne(() => AppUsers, (appUser) => appUser.globalUser, { cascade: true })

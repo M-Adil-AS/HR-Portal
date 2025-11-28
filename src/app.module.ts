@@ -34,6 +34,8 @@ import { Notification } from './notification/entities/notification.entity';
 import { NotificationSchedule } from './notification/entities/notification-schedule.entity';
 import { NotificationRecipient } from './notification/entities/notification-recipient.entity';
 import { NotificationStatus } from './notification/entities/notification-status.entity';
+import { WorkQueue } from './workqueue/workqueue.entity';
+import { WorkQueueModule } from './workqueue/workqueue.module';
 
 // Database Concepts:
 // Server-level role/permission (e.g. sysadmin) can be applied only to Logins, because Users do not exist at the server level.
@@ -45,7 +47,7 @@ import { NotificationStatus } from './notification/entities/notification-status.
   imports: [
     ConfigModule.forRoot({
       // NODE_ENV altered in package.json OR on deployment platform.
-      // On deployed version, setting NODE_ENV on platform will override the NODE_ENV from build -> start:prod commands in package.json
+      // On deployment platform, NODE_ENV is set to production by default and NODE_ENV from build -> start:prod commands in package.json will override it
       // If the file does not exist, ConfigModule will still load environment variables from process.env (which are set on the platform)
       envFilePath: `.env.${process.env.NODE_ENV}`,
       isGlobal: true,
@@ -71,6 +73,7 @@ import { NotificationStatus } from './notification/entities/notification-status.
             trustServerCertificate: true, // Bypass SSL verification (for local)
           },
           entities: [
+            WorkQueue,
             Company,
             Tenant,
             GlobalUsers,
@@ -145,6 +148,7 @@ import { NotificationStatus } from './notification/entities/notification-status.
     }),
 
     CompanyModule,
+    WorkQueueModule,
     ErrorHandlerModule, // Registering Global Module
   ],
   controllers: [AppController],

@@ -64,11 +64,13 @@ export class ApiErrorHandlerService {
       }
       // The request was made but no response was received
       else if (exception?.request) {
+        status = HttpStatus.SERVICE_UNAVAILABLE;
         message = `Request Failed with Status Code ${status}. No Response received from the server!`;
         data = exception?.request;
       }
       // Something happened in setting up the request that triggered an Error
       else {
+        status = HttpStatus.BAD_REQUEST;
         message = `Request Failed with Status Code ${status}. Request not sent to server!`;
       }
     } else if (exception instanceof AggregateError) {

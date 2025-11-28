@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { TenantUsers } from './tenant-user.entity';
 import { CryptoService } from 'src/crypto/crypto.service';
@@ -18,6 +18,20 @@ export class TenantUserService {
 
     let user = userRepository.create({ email, name, password: hashedPassword });
     user = await userRepository.save(user);
+
+    return user;
+  }
+
+  async getTenantUser(
+    tenantConnection: DataSource,
+    userId: string,
+  ): Promise<TenantUsers> {
+    const userRepository = tenantConnection.getRepository(TenantUsers);
+    const user = await userRepository.findOne({
+      where: [{ id: userId }],
+    });
+
+    if (!user) throw new NotFoundException('Tenant User not found!');
 
     return user;
   }

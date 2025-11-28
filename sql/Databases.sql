@@ -29,6 +29,20 @@ CREATE TABLE Tenants (
 	FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE NO ACTION
 );
 
+CREATE TABLE WorkQueue (
+	id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+	companyName VARCHAR(50) NOT NULL CHECK (LEN(companyName) BETWEEN 3 AND 50),
+	userName VARCHAR(50) NOT NULL CHECK (LEN(userName) BETWEEN 3 AND 50),
+	email VARCHAR(100) UNIQUE NOT NULL CHECK (LEN(email) BETWEEN 6 AND 100),
+	password VARCHAR(200) NOT NULL,
+	accountManagerId UNIQUEIDENTIFIER UNIQUE DEFAULT NULL,
+	status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+	createdAt DATETIME DEFAULT GETDATE()
+	FOREIGN KEY (accountManagerId) REFERENCES GlobalUsers(id) ON DELETE NO ACTION
+);
+
+CREATE UNIQUE INDEX UX_WorkQueue_CompanyName_NotRejected ON WorkQueue(companyName) WHERE status <> 'rejected';
+
 CREATE TABLE GlobalUsers (
     id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     email VARCHAR(100) UNIQUE NOT NULL CHECK (LEN(email) BETWEEN 6 AND 100),

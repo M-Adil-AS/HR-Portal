@@ -14,7 +14,7 @@ import { IsCompanyDomain } from 'src/decorators/validators';
 
 // Validators throw Errors in order: bottom to up
 
-export class RegisterCompanyDto {
+export class SubmitOnboardingDto {
   @TrimAndLowerCase() // Type check inside TrimAndLowerCase() because Transform runs before other Validator checks
   @Length(3, 50, {
     message: 'Company Name must be between 3 and 50 characters',

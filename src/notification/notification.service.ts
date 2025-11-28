@@ -29,23 +29,25 @@ export class NotificationService {
   async dispatch(notification: Notification): Promise<void> {
     const notificationId: number = await this.saveNotification(notification);
 
-    await this.processNotifications(notificationId);
+    await this.processNotifications({ notificationId });
   }
 
-  async processNotifications(notificationId: number | null) {
-    let result;
-
-    if (notificationId === null) {
-      result = await this.globalConnection.query(
-        `EXEC [dbo].[GetPendingNotifications];`,
-      );
-    } else {
-      result = await this.globalConnection.query(
-        `EXEC [dbo].[GetPendingNotifications] 
-          @notificationId = @0`,
-        [notificationId],
-      );
-    }
+  async processNotifications({
+    notificationId = null,
+    userEmail = null,
+    type = null,
+  }: {
+    notificationId?: number | null;
+    userEmail?: string | null;
+    type?: string | null;
+  }) {
+    let result = await this.globalConnection.query(
+      `EXEC [dbo].[GetPendingNotifications]
+        @notificationId = @0,
+        @userEmail = @1,
+        @type = @2`,
+      [notificationId, userEmail, type],
+    );
 
     const notifications: PendingNotification[] = result.map(
       (notification: any) => {
@@ -85,7 +87,7 @@ export class NotificationService {
         )
           ? { notificationSchedule: { id: notification.scheduleId } }
           : {
-              id: notification?.recipients?.[0]?.notificationStatus
+              id: notification?.recipients[0]?.notificationStatus
                 ?.notificationStatusId,
             };
 

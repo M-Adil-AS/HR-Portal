@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 
 /*
-  Instead of modifying service-level defaults (e.g. global headers, responseType) for every request:
+  Modifying service-level defaults (e.g. global headers, responseType) would lead to concurrency issues / race conditions. Instead do:
   - Set default values once so that most requests use them.
   - Use per-request overrides for exceptional cases where different values are needed.
   - Avoid unnecessary modifications to defaults to prevent unintended side effects.
@@ -16,12 +16,11 @@ import { firstValueFrom } from 'rxjs';
   
   With request-scoping: 
   - Defaults set via setGlobalHeader() or setBearerToken() would not persist across requests
-  - Modifying defaults would lead to concurrency issues / race conditions 
   - Performance overhead, unnecessary complexity
   - If request-specific data (i.e. tenantId attached to req object in middleware/interceptor) is required to be sent to Third API call, retrieve those properties in the callingService using @Req and call httpService with explicit per-request config options
   - Hence avoid using request-scoped httpService
   
-  If we are making Third Party API calls on behalf of Tenants:
+  If we are making Third Party API calls on behalf of Tenants with our own set of API keys:
     1. There is only one Client ID and Client Secret stored in env
     2. Fetch Auth Token using Client ID and Client Secret
     3. There is only one Auth Token that can be stored as global header of a specific httpClientService
@@ -30,6 +29,9 @@ import { firstValueFrom } from 'rxjs';
           Authorization: Bearer ${authToken},
           'X-Tenant-Id': tenantId, // Identify the tenant in your system
        },
+    5. Should have a method that checks before every request that if expiry is reached, then regain the new auth Token
+    6. If expiry is not reached, use the stored auth token for Third party API requests
+    7. Better if pre-fetches the auth token on app startup
 
   If each tenant must subscribe to the third party API, receive its own Client ID and Client Secret, and requires a unique auth token:
     Manual Onboarding on Third Party API
@@ -46,8 +48,9 @@ import { firstValueFrom } from 'rxjs';
        1. Client ID and Client Secret are retrieved using @Req: tenantId assuming that it is set on the req object in middleware/interceptor
        2. Pass the Client ID and Client Secret through httpService request explicitly to gain auth Token
        3. After fetching auth Token, you can save it in with its expiry in Redis / DB / KeyVault / Map against TenantId
-       4. Should have a method that checks that if expiry is reached, then regain the new auth Token before every request
+       4. Should have a method that checks before every request that if expiry is reached, then regain the new auth Token
        5. If expiry is not reached, use the stored / cached auth token for Third party API requests
+       6. Better if pre-fetches all the auth tokens on app startup
 
     Recommended place to store entries of Client ID, Client Secret (encrypted) against Tenant Id is in Database
     
@@ -55,7 +58,7 @@ import { firstValueFrom } from 'rxjs';
 
     Recommended place to store entries of Long Lived Auth Token against Tenant Id is in Redis and then DB (Optional Backup in case Redis resets)
 
-    Whenever we use a Third Party API, pass the auth Token explicitly in httpService per request-basis
+    Whenever we use a Third Party API, pass the tenant's auth Token explicitly in httpService per request-basis
 */
 
 @Injectable()
